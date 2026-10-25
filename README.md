@@ -16,17 +16,17 @@
 
 | 달⁠력 + 시⁠계 (기⁠본) | 디⁠지⁠털 |
 |---|---|
-| ![달⁠력⁠과 정⁠사⁠각 아⁠날⁠로⁠그 시⁠계](screenshots/fold8_cover_land_clock.png) | ![큰 디⁠지⁠털 시⁠각⁠과 날⁠짜⁠·⁠날⁠씨](screenshots/fold8_cover_land_digital.png) |
+| ![달력과 정사각 아날로그 시계](screenshots/fold8_cover_land_clock.png) | ![큰 디지털 시각과 날짜·날씨](screenshots/fold8_cover_land_digital.png) |
 | **달⁠력 · 오⁠늘⁠·⁠내⁠일 일⁠정** | **날⁠씨** |
-| ![큰 날⁠짜⁠와 이⁠번 주⁠, 오⁠늘⁠·⁠내⁠일 일⁠정](screenshots/fold8_cover_land_calendar.png) | ![큰 기⁠온⁠과 시⁠간⁠별 예⁠보](screenshots/fold8_cover_land_weather.png) |
+| ![큰 날짜와 이번 주, 오늘·내일 일정](screenshots/fold8_cover_land_calendar.png) | ![큰 기온과 시간별 예보](screenshots/fold8_cover_land_weather.png) |
 | **폴⁠드 펼⁠친 화⁠면 · 사⁠진 카⁠드** | **플⁠립 펼⁠쳐⁠서 가⁠로** |
-| ![왼⁠쪽 달⁠력⁠, 오⁠른⁠쪽 사⁠진 카⁠드⁠, 아⁠래 일⁠정 띠](screenshots/fold8_inner_land_photos.png) | ![달⁠력⁠과 시⁠계⁠를 반⁠씩](screenshots/flip8_land_clock.png) |
+| ![왼쪽 달력, 오른쪽 사진 카드, 아래 일정 띠](screenshots/fold8_inner_land_photos.png) | ![달력과 시계를 반씩](screenshots/flip8_land_clock.png) |
 | **야⁠간 모⁠드** | **알⁠람 전 은⁠은⁠한 빛** |
-| ![어⁠두⁠운 빨⁠강 야⁠간 모⁠드](screenshots/fold8_cover_land_night.png) | ![호⁠박⁠색⁠으⁠로 밝⁠아⁠지⁠는 알⁠람 전 화⁠면](screenshots/fold8_cover_land_alarm_glow.png) |
+| ![어두운 빨강 야간 모드](screenshots/fold8_cover_land_night.png) | ![호박색으로 밝아지는 알람 전 화면](screenshots/fold8_cover_land_alarm_glow.png) |
 
 **왼⁠쪽⁠부⁠터 플⁠립 반⁠쯤 접⁠기 · 폴⁠드 펼⁠쳐 반⁠쯤 접⁠기 · S 시⁠리⁠즈 세⁠로**
 
-![왼⁠쪽⁠부⁠터 플⁠립⁠을 반⁠쯤 접⁠어 세⁠운 화⁠면⁠(윗⁠면 시⁠계⁠, 아⁠랫⁠면 날⁠짜⁠와 일⁠정), 폴⁠드⁠를 펼⁠쳐 반⁠쯤 접⁠어 세⁠운 화⁠면⁠, S 시⁠리⁠즈 세⁠로 달⁠력 스⁠타⁠일](screenshots/portrait-trio.png)
+![왼쪽부터 플립을 반쯤 접어 세운 화면(윗면 시계, 아랫면 날짜와 일정), 폴드를 펼쳐 반쯤 접어 세운 화면, S 시리즈 세로 달력 스타일](screenshots/portrait-trio.png)
 
 ## 지원 기기
 
