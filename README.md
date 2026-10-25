@@ -23,11 +23,9 @@
 | **야간 모드** | **알람 전 은은한 빛** |
 | ![어두운 빨강 야간 모드](app/screenshots/fold8_cover_land_night.png) | ![호박색으로 밝아지는 알람 전 화면](app/screenshots/fold8_cover_land_alarm_glow.png) |
 
-<p>
-  <img src="app/screenshots/flip8_tabletop_clock.png" width="200" alt="플립을 반쯤 접어 세웠을 때: 윗면 시계, 아랫면 날짜와 일정">
-  <img src="app/screenshots/fold8_inner_tabletop.png" width="300" alt="폴드를 펼쳐 반쯤 접어 세웠을 때: 윗면 시계, 아랫면 날짜와 일정">
-  <img src="app/screenshots/galaxy_s_port_calendar.png" width="180" alt="S 시리즈 세로: 달력 스타일">
-</p>
+| 플립 반쯤 접기 | 폴드 펼쳐 반쯤 접기 | S 시리즈 세로 |
+|:---:|:---:|:---:|
+| <img src="app/screenshots/flip8_tabletop_clock.png" height="240" alt="플립을 반쯤 접어 세웠을 때: 윗면 시계, 아랫면 날짜와 일정"> | <img src="app/screenshots/fold8_inner_tabletop.png" height="240" alt="폴드를 펼쳐 반쯤 접어 세웠을 때: 윗면 시계, 아랫면 날짜와 일정"> | <img src="app/screenshots/galaxy_s_port_calendar.png" height="240" alt="S 시리즈 세로: 달력 스타일"> |
 
 ## 지원 기기
 
