@@ -12,7 +12,7 @@
 
 ## 스크린샷
 
-예⁠시 데⁠이⁠터⁠로 그⁠린 화⁠면⁠이⁠에⁠요⁠. 일⁠정⁠과 날⁠씨⁠는 예⁠시⁠이⁠고⁠, 사⁠진 카⁠드⁠의 팬⁠케⁠이⁠크 사⁠진⁠은 Joseph Gonzalez⁠의 CC0 사⁠진⁠이⁠에⁠요⁠([Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Pancakes_(Unsplash).jpg)).
+예⁠시 데⁠이⁠터⁠로 그⁠린 화⁠면⁠이⁠에⁠요⁠. 일⁠정⁠과 날⁠씨⁠는 예⁠시⁠이⁠고⁠, 사⁠진 카⁠드⁠의 라⁠떼 사⁠진⁠은 직⁠접 찍⁠은 사⁠진⁠이⁠에⁠요⁠.
 
 | 달⁠력 + 시⁠계 (기⁠본) | 디⁠지⁠털 |
 |---|---|
@@ -183,4 +183,3 @@ Android 12 이⁠상⁠의 갤⁠럭⁠시⁠라⁠면 설⁠치⁠하⁠고 쓸
 - 앱⁠: [MIT](LICENSE)
 - 글⁠꼴 Nunito: SIL Open Font License 1.1 ([licenses/OFL-Nunito.txt](licenses/OFL-Nunito.txt))
 - 날⁠씨 데⁠이⁠터⁠: [Open-Meteo](https://open-meteo.com/) (CC BY 4.0)
-- 사⁠진 카⁠드 예⁠시 사⁠진⁠: Joseph Gonzalez, CC0 ([Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Pancakes_(Unsplash).jpg))

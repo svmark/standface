@@ -11,7 +11,7 @@
 
 ## 스크린샷
 
-예시 데이터로 그린 화면이에요. 일정과 날씨는 예시이고, 사진 카드의 팬케이크 사진은 Joseph Gonzalez의 CC0 사진이에요([Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Pancakes_(Unsplash).jpg)).
+예시 데이터로 그린 화면이에요. 일정과 날씨는 예시이고, 사진 카드의 라떼 사진은 직접 찍은 사진이에요.
 
 | 달력 + 시계 (기본) | 디지털 |
 |---|---|
@@ -182,4 +182,3 @@ Android 12 이상의 갤럭시라면 설치하고 쓸 수 있어요. 화면 크�
 - 앱: [MIT](LICENSE)
 - 글꼴 Nunito: SIL Open Font License 1.1 ([licenses/OFL-Nunito.txt](licenses/OFL-Nunito.txt))
 - 날씨 데이터: [Open-Meteo](https://open-meteo.com/) (CC BY 4.0)
-- 사진 카드 예시 사진: Joseph Gonzalez, CC0 ([Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Pancakes_(Unsplash).jpg))
