@@ -24,3 +24,6 @@ docs/plan-v[1-5].html
 # 개발 중 찍은 화면(공개용은 docs/screenshots/)
 docs/emu-*.png
 docs/fold8-*.png
+
+# 사용자 답변 초안(내부용)
+docs/user-replies-*.md

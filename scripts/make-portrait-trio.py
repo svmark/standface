@@ -17,5 +17,5 @@ x = 0
 for im in ims:
     out.paste(im, (x, 0))
     x += im.width + GAP
-out.save(ROOT / "docs/screenshots/portrait-trio.png", optimize=True)
-print("docs/screenshots/portrait-trio.png", out.size)
+out.save(ROOT / "screenshots/portrait-trio.png", optimize=True)
+print("screenshots/portrait-trio.png", out.size)
