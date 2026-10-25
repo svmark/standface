@@ -21,7 +21,7 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 
-/** 화면 스냅숏용 고정 값: 2026-10-25(일) 오전 9:41, 서울 맑음, 예시 일정, 팬케이크 사진(CC0). */
+/** 화면 스냅숏용 고정 값: 2026-10-25(일) 오전 9:41, 서울 맑음, 예시 일정, 라떼 사진(직접 찍은 사진). */
 class FixedSources(
     private val dark: Boolean = false,
     private val media: MediaState = MediaState.Idle,
@@ -64,7 +64,7 @@ class FixedSources(
         ),
     )
 
-    private val photo = Uri.parse("test://photo/pancakes")
+    private val photo = Uri.parse("test://photo/latte")
 
     @Composable private fun <T> fixed(value: T): State<T> = remember { mutableStateOf(value) }
 
