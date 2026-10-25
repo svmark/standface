@@ -173,7 +173,7 @@ Android 12 이상의 갤럭시라면 설치하고 쓸 수 있어요. 화면 크�
 - 폰을 어떻게 뒀는지(가로로 세움, 반쯤 접음, 세로 등), 충전 중이었는지
 - 어색하거나 잘린 화면의 스크린샷
 
-[GitHub 이슈](https://github.com/svmark/standface/issues)나 [Threads 글](https://www.threads.com/@hulc.ai/post/De5zSBygYis)에 남겨 주세요.
+[GitHub 이슈](https://github.com/svmark/standface/issues)나 [Threads 글](https://www.threads.com/@hulc.ai/post/De6PJr9AQG8)에 남겨 주세요.
 
 개인이 틈틈이 만드는 앱이라 답이 늦을 수 있어요. 버그 제보와 의견은 언제나 환영이고, 코드 기여는 이슈로 먼저 이야기해 주세요.
 

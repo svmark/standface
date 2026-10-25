@@ -174,7 +174,7 @@ Android 12 이⁠상⁠의 갤⁠럭⁠시⁠라⁠면 설⁠치⁠하⁠고 쓸
 - 폰⁠을 어⁠떻⁠게 뒀⁠는⁠지⁠(가⁠로⁠로 세⁠움⁠, 반⁠쯤 접⁠음⁠, 세⁠로 등), 충⁠전 중⁠이⁠었⁠는⁠지
 - 어⁠색⁠하⁠거⁠나 잘⁠린 화⁠면⁠의 스⁠크⁠린⁠샷
 
-[GitHub 이⁠슈](https://github.com/svmark/standface/issues)⁠나 [Threads 글](https://www.threads.com/@hulc.ai/post/De5zSBygYis)⁠에 남⁠겨 주⁠세⁠요⁠.
+[GitHub 이⁠슈](https://github.com/svmark/standface/issues)⁠나 [Threads 글](https://www.threads.com/@hulc.ai/post/De6PJr9AQG8)⁠에 남⁠겨 주⁠세⁠요⁠.
 
 개⁠인⁠이 틈⁠틈⁠이 만⁠드⁠는 앱⁠이⁠라 답⁠이 늦⁠을 수 있⁠어⁠요⁠. 버⁠그 제⁠보⁠와 의⁠견⁠은 언⁠제⁠나 환⁠영⁠이⁠고⁠, 코⁠드 기⁠여⁠는 이⁠슈⁠로 먼⁠저 이⁠야⁠기⁠해 주⁠세⁠요⁠.
 
