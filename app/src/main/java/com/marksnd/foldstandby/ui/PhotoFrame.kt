@@ -5,7 +5,10 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -21,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Shadow
@@ -41,7 +45,8 @@ private const val PHOTO_MAX_SIDE = 1800
 
 /**
  * 고른 앨범 사진을 섞어서 30초마다 천천히 바꿔 보여준다. 왼쪽 아래에 지금 시각.
- * 밤에는 사진을 어둡게 한다.
+ * 밝은 사진에서도 시각이 읽히게 아래쪽에 옅은 어둠 띠를 깐다.
+ * 밤에는 사진을 어둡게 하고, 이미 어두우니 띠는 깔지 않는다.
  */
 @Composable
 fun PhotoFrame(photos: List<Uri>, modifier: Modifier = Modifier) {
@@ -84,13 +89,25 @@ fun PhotoFrame(photos: List<Uri>, modifier: Modifier = Modifier) {
                     )
                 }
             }
+            if (current != null && !p.night) {
+                Box(
+                    Modifier.align(Alignment.BottomCenter).fillMaxWidth().fillMaxHeight(0.5f)
+                        .background(
+                            Brush.verticalGradient(
+                                0f to Color.Transparent,
+                                0.4f to Color.Black.copy(alpha = 0.35f),
+                                1f to Color.Black.copy(alpha = 0.7f),
+                            ),
+                        ),
+                )
+            }
             Text(
                 text = time,
                 modifier = Modifier.align(Alignment.BottomStart).padding(start = maxWidth * 0.06f, bottom = maxHeight * 0.05f),
                 color = p.primary,
                 fontSize = timeSize,
                 fontWeight = FontWeight.SemiBold,
-                style = TextStyle(shadow = Shadow(Color.Black.copy(alpha = 0.55f), Offset(0f, 2f), blurRadius = 16f)),
+                style = TextStyle(shadow = Shadow(Color.Black.copy(alpha = 0.7f), Offset(0f, 2f), blurRadius = 16f)),
             )
         }
     }
