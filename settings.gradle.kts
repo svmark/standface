@@ -12,5 +12,5 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "fold-standby"
+rootProject.name = "standface"
 include(":app")

@@ -1,7 +1,7 @@
 #!/bin/bash
 # Fold StandBy 정식(출시용) 서명키 1회 생성. Mac 터미널에서 직접 실행한다.
-#   bash ~/Projects/fold-standby/scripts/create-release-key.sh          (비밀번호 직접 입력)
-#   bash ~/Projects/fold-standby/scripts/create-release-key.sh --auto   (임의 비밀번호 생성, 키체인에만 저장)
+#   bash ~/Projects/galaxy-standface/scripts/create-release-key.sh          (비밀번호 직접 입력)
+#   bash ~/Projects/galaxy-standface/scripts/create-release-key.sh --auto   (임의 비밀번호 생성, 키체인에만 저장)
 # - 비밀번호는 화면에 표시되지 않고, 이 스크립트 밖으로 출력되지 않는다.
 # - 키: ~/.android-keys/foldstandby-release.jks (권한 600)
 # - 비밀번호: macOS 키체인 항목 "fold-standby-release-keystore"
