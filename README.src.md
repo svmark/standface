@@ -50,7 +50,7 @@ Android 12 이상의 갤럭시라면 설치하고 쓸 수 있어요. 화면 크�
 ### 1. APK 파일 받기
 
 1. 폰에서 이 페이지를 열어요.
-2. [내려받기](https://github.com/svmark/standface/releases) 페이지 맨 위(가장 최근 버전)의 **Assets** 아래에서 `Standface-`로 시작하는 `.apk` 파일(예: `Standface-1.1.0.apk`)을 눌러 내려받아요.
+2. [내려받기](https://github.com/svmark/standface/releases) 페이지 맨 위(가장 최근 버전)의 **Assets** 아래에서 `Standface-`로 시작하는 `.apk` 파일(예: `Standface-1.1.0-beta.2.apk`)을 눌러 내려받아요. 지금 나와 있는 버전은 테스트판 v1.1.0-beta.2라서 **Pre-release** 표시가 붙어 있어요.
 3. "이 유형의 파일은 기기를 손상시킬 수 있습니다" 같은 안내가 나오면 **다운로드**를 눌러요.
 
 ### 2. 자동 차단 끄기 (켜져 있을 때만)
