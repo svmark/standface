@@ -6,6 +6,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import android.widget.Toast
@@ -304,21 +305,30 @@ private fun openDreamSettings(context: Context) {
     }
 }
 
-/** 삼성 모드 및 루틴 앱. 없으면(삼성이 아닌 폰) 화면 보호기를 쓰라고 토스트로 알린다. 토스트는 두 줄까지만 보인다. */
+/**
+ * 삼성 모드 및 루틴 앱. 런처 아이콘이 없는 앱이라(폴드8에서 확인) 앱 자체의 딥링크로 연다.
+ * 없으면(삼성이 아닌 폰) 화면 보호기를 쓰라고 토스트로 알린다. 토스트는 두 줄까지만 보인다.
+ */
 private fun openRoutines(context: Context) {
+    val deepLink = Intent(Intent.ACTION_VIEW, Uri.parse(ROUTINES_DEEP_LINK)).setPackage(ROUTINES_PACKAGE)
     val launch = context.packageManager.getLaunchIntentForPackage(ROUTINES_PACKAGE)
     try {
-        context.startActivity(launch ?: throw ActivityNotFoundException())
+        context.startActivity(deepLink)
     } catch (_: ActivityNotFoundException) {
-        Toast.makeText(
-            context,
-            "이 폰에는 모드 및 루틴이 없어요. 2번 화면 보호기를 쓰세요.",
-            Toast.LENGTH_LONG,
-        ).show()
+        try {
+            context.startActivity(launch ?: throw ActivityNotFoundException())
+        } catch (_: ActivityNotFoundException) {
+            Toast.makeText(
+                context,
+                "이 폰에는 모드 및 루틴이 없어요. 2번 화면 보호기를 쓰세요.",
+                Toast.LENGTH_LONG,
+            ).show()
+        }
     }
 }
 
 private const val ROUTINES_PACKAGE = "com.samsung.android.app.routines"
+private const val ROUTINES_DEEP_LINK = "routines://main/launch"
 
 private fun openNotificationAccess(context: Context) {
     val component = ComponentName(context, NotifListener::class.java).flattenToString()
