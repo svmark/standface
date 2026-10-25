@@ -57,6 +57,9 @@ def build(src: str) -> str:
         out.append(glue(src[last:m.start()]))
         out.append(m.group(0))
         last = m.end()
+        # 링크 바로 뒤에 붙은 조사(예: [처음 설정 1번](#...)의)와 링크 글자 사이도 끊기지 않게
+        if m.group(0).startswith("](") and re.match(f"[{HANGUL}]", src[last:last + 1]):
+            out.append(WJ)
     out.append(glue(src[last:]))
     head = "<!-- 이 파일은 scripts/build-readme.py가 README.src.md에서 만든다. 고칠 때는 README.src.md를 고친다. -->\n"
     return head + "".join(out)
