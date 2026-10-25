@@ -24,7 +24,7 @@ export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
 ./gradlew verifyRoborazziDebug   # 화면을 app/screenshots/의 기준 그림과 비교
 ```
 
-화면을 일부러 바꿨다면 `./gradlew recordRoborazziDebug`로 기준 그림을 다시 만들고, 바뀐 그림을 눈으로 확인한 뒤 커밋해요.
+화면을 일부러 바꿨다면 `./gradlew recordRoborazziDebug`로 기준 그림을 다시 만들고, 바뀐 그림을 눈으로 확인한 뒤 커밋해요. README의 세로 예시 묶음 그림도 `python3 scripts/make-portrait-trio.py`로 다시 만들어요.
 
 ## 2. 버전과 변경 기록
 
