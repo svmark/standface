@@ -25,6 +25,8 @@ import java.time.ZonedDateTime
 class FixedSources(
     private val dark: Boolean = false,
     private val media: MediaState = MediaState.Idle,
+    /** 다음 알람까지 남은 분. 15분 안이면 알람 전 빛이 켜진다. */
+    private val alarmInMinutes: Long? = null,
 ) : StandbySources {
     val zone: ZoneId = ZoneId.of("Asia/Seoul")
     val nowTime: ZonedDateTime = ZonedDateTime.of(2026, 10, 25, 9, 41, 7, 0, zone)
@@ -72,7 +74,7 @@ class FixedSources(
     @Composable override fun agenda(refreshKey: Int) = fixed(agendaState)
     @Composable override fun nowPlaying() = fixed(media)
     @Composable override fun albumPhotos(albumId: Long?) = fixed(if (albumId != null) listOf(photo) else emptyList())
-    @Composable override fun nextAlarm() = fixed<Long?>(null)
+    @Composable override fun nextAlarm() = fixed(alarmInMinutes?.let { nowMs + it * 60_000 })
     @Composable override fun isDark() = fixed(dark)
     @Composable override fun lastMotion(enabled: Boolean) = fixed(nowMs)
     @Composable override fun pixelShift(stepPx: Int) = fixed(IntOffset.Zero)

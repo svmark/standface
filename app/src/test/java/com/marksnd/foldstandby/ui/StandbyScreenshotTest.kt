@@ -91,6 +91,7 @@ class StandbyScreenshotTest {
     @Config(qualifiers = FOLD8_COVER_LAND) @Test fun fold8CoverWeather() = shoot("fold8_cover_land_weather") { nextPage() }
     @Config(qualifiers = FOLD8_COVER_LAND) @Test fun fold8CoverMusic() = shoot("fold8_cover_land_music_noaccess", sources = FixedSources(media = MediaState.NoAccess)) { nextPage(); composeRule.waitForIdle(); nextPage() }
     @Config(qualifiers = FOLD8_COVER_LAND) @Test fun fold8CoverNight() = shoot("fold8_cover_land_night", sources = FixedSources(dark = true))
+    @Config(qualifiers = FOLD8_COVER_LAND) @Test fun fold8CoverAlarmGlow() = shoot("fold8_cover_land_alarm_glow", sources = FixedSources(alarmInMinutes = 5))
     @Config(qualifiers = FOLD8_COVER_PORT) @Test fun fold8CoverPortrait() = shoot("fold8_cover_port_clock")
 
     // 폴드8 펼친 화면
