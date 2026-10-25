@@ -2,8 +2,8 @@
 
 새 버전을 낼 때마다 이 순서를 그대로 따라요. 명령은 저장소 폴더에서 실행해요.
 
-- 소스 코드: `svmark/fold-standby` (이 저장소)
-- 배포(README·스크린샷·APK 릴리스): `svmark/standface`. 이 Mac의 `standface-repo/` 폴더가 그 저장소예요(이 저장소에는 올리지 않음).
+- 저장소는 `svmark/standface` 하나예요. 소스 코드, README, 스크린샷, CHANGELOG, APK 릴리스가 모두 여기 있어요(2026-10-26 통일).
+- 예전 소스 저장소 `svmark/fold-standby`는 보관(읽기 전용)했어요. 거기에는 올리지 않아요.
 
 ```bash
 export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
@@ -27,12 +27,13 @@ export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
 ./gradlew verifyRoborazziDebug   # 화면을 app/screenshots/의 기준 그림과 비교
 ```
 
-화면을 일부러 바꿨다면 `./gradlew recordRoborazziDebug`로 기준 그림을 다시 만들고, 바뀐 그림을 눈으로 확인한 뒤 커밋해요. README의 세로 예시 묶음 그림도 `python3 scripts/make-portrait-trio.py`로 다시 만들어요.
+화면을 일부러 바꿨다면 `./gradlew recordRoborazziDebug`로 기준 그림을 다시 만들고, 바뀐 그림을 눈으로 확인한 뒤 커밋해요. README에 쓰는 그림은 `app/screenshots/`에서 같은 이름으로 `screenshots/`에 복사하고, 세로 예시 묶음 그림은 `python3 scripts/make-portrait-trio.py`, 소셜 미리보기는 `python3 scripts/make-social-preview.py`로 다시 만들어요. 소셜 미리보기는 GitHub 저장소 Settings에서 직접 올려야 바뀌어요.
 
 ## 2. 버전과 변경 기록
 
 1. `app/build.gradle.kts`에서 `versionCode`를 1 올리고 `versionName`을 바꿔요.
 2. `CHANGELOG.md` 맨 위에 새 버전과 바뀐 점을 적어요.
+3. README에 버전 이름이 들어간 곳(설치하기의 APK 이름 예시, "지금 나와 있는 버전")을 `README.src.md`에서 고치고 `python3 scripts/build-readme.py`로 `README.md`를 만들어요. `README.md`를 직접 고치지 않아요. 한글 줄바꿈은 hangul-wrap 스킬로 재요(쪼개짐 0).
 
 ## 3. 정식 빌드와 서명 확인
 
@@ -53,23 +54,21 @@ export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
 
 ```bash
 git add -A && git commit -m "vX.Y.Z: …"
-git push
+GH_TOKEN="$(gh auth token --user svmark)" git -c credential.helper= -c 'credential.helper=!f(){ echo username=svmark; echo "password=$GH_TOKEN"; }; f' push
 ```
 
-GitHub Actions의 테스트가 통과하는지 확인해요.
+GitHub Actions의 테스트(`test`, `dependencies`)가 통과하는지 확인해요.
 
 ## 6. GitHub 릴리스
 
 ```bash
 cp app/build/outputs/apk/release/app-release.apk /tmp/Standface-X.Y.Z.apk
-gh release create vX.Y.Z /tmp/Standface-X.Y.Z.apk --repo svmark/standface \
+GH_TOKEN="$(gh auth token --user svmark)" gh release create vX.Y.Z /tmp/Standface-X.Y.Z.apk --repo svmark/standface \
   --title "Standface X.Y.Z" --notes-file notes.md --target main
 ```
 
 - 베타는 `--prerelease`를 붙여요. 그러면 README의 "최신 버전 받기"는 계속 정식 버전을 가리켜요.
 - 릴리스 노트는 `CHANGELOG.md`에서 옮기고, 서명 인증서 SHA-256과 APK SHA-256을 함께 적어요.
-- 릴리스 전에 `standface-repo/`의 README·스크린샷·CHANGELOG를 이 저장소와 맞추고 그 저장소에 푸시해요.
-- standface README는 `README.src.md`를 고치고 `python3 scripts/build-readme.py`로 `README.md`를 만들어요(한글 줄바꿈 처리). 직접 `README.md`를 고치지 않아요.
 
 ## 7. 올린 파일 확인
 
