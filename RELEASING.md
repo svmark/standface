@@ -2,6 +2,9 @@
 
 새 버전을 낼 때마다 이 순서를 그대로 따라요. 명령은 저장소 폴더에서 실행해요.
 
+- 소스 코드: `svmark/fold-standby` (이 저장소)
+- 배포(README·스크린샷·APK 릴리스): `svmark/standface`. 이 Mac의 `standface-repo/` 폴더가 그 저장소예요(이 저장소에는 올리지 않음).
+
 ```bash
 export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
 ```
@@ -58,18 +61,19 @@ GitHub Actions의 테스트가 통과하는지 확인해요.
 ## 6. GitHub 릴리스
 
 ```bash
-cp app/build/outputs/apk/release/app-release.apk /tmp/FoldStandBy-X.Y.Z.apk
-gh release create vX.Y.Z /tmp/FoldStandBy-X.Y.Z.apk --repo svmark/fold-standby \
-  --title "Fold StandBy X.Y.Z" --notes-file notes.md --target main
+cp app/build/outputs/apk/release/app-release.apk /tmp/Standface-X.Y.Z.apk
+gh release create vX.Y.Z /tmp/Standface-X.Y.Z.apk --repo svmark/standface \
+  --title "Standface X.Y.Z" --notes-file notes.md --target main
 ```
 
 - 베타는 `--prerelease`를 붙여요. 그러면 README의 "최신 버전 받기"는 계속 정식 버전을 가리켜요.
 - 릴리스 노트는 `CHANGELOG.md`에서 옮기고, 서명 인증서 SHA-256과 APK SHA-256을 함께 적어요.
+- 릴리스 전에 `standface-repo/`의 README·스크린샷·CHANGELOG를 이 저장소와 맞추고 그 저장소에 푸시해요.
 
 ## 7. 올린 파일 확인
 
 ```bash
-curl -sL -o /tmp/check.apk https://github.com/svmark/fold-standby/releases/download/vX.Y.Z/FoldStandBy-X.Y.Z.apk
+curl -sL -o /tmp/check.apk https://github.com/svmark/standface/releases/download/vX.Y.Z/Standface-X.Y.Z.apk
 shasum -a 256 /tmp/check.apk
 ```
 
