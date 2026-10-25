@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.provider.Settings
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -133,8 +134,17 @@ private fun SetupScreen() {
 
                 SectionTitle("충전할 때 자동으로 켜기")
                 StepCard(
-                    title = "화면 보호기로 지정",
-                    body = "설정 › 디스플레이 › 화면 보호기에서 Standface를 고르고, 시작 조건을 '충전 중'으로 바꿔 주세요. " +
+                    title = "1. 삼성 루틴 만들기",
+                    body = "삼성 폰은 충전 중에 화면이 꺼지면 화면 보호기보다 Always On Display가 먼저 나와요. " +
+                        "루틴을 하나 만들면 충전기에 올리자마자 Standface가 열려요.\n" +
+                        "설정 › 모드 및 루틴 › 루틴 › + › 조건 추가 › 충전 상태 › '충전 중' › " +
+                        "동작 추가 › 앱 › 앱 열기 › Standface › 저장",
+                    action = "모드 및 루틴 열기",
+                ) { openRoutines(context) }
+                StepCard(
+                    title = "2. 화면 보호기로 지정 (보조)",
+                    body = "루틴을 만들지 못했거나 삼성 폰이 아니면 화면 보호기로 켜요. " +
+                        "설정 › 디스플레이 › 화면 보호기에서 Standface를 고르고, 시작 조건을 '충전 중'으로 바꿔 주세요. " +
                         "메뉴가 안 보이면 설정 검색창에서 '화면 보호기'를 찾으세요.",
                     action = "화면 보호기 설정 열기",
                 ) { openDreamSettings(context) }
@@ -293,6 +303,22 @@ private fun openDreamSettings(context: Context) {
         context.startActivity(Intent(Settings.ACTION_DISPLAY_SETTINGS))
     }
 }
+
+/** 삼성 모드 및 루틴 앱. 없으면(삼성이 아닌 폰) 화면 보호기를 쓰라고 토스트로 알린다. 토스트는 두 줄까지만 보인다. */
+private fun openRoutines(context: Context) {
+    val launch = context.packageManager.getLaunchIntentForPackage(ROUTINES_PACKAGE)
+    try {
+        context.startActivity(launch ?: throw ActivityNotFoundException())
+    } catch (_: ActivityNotFoundException) {
+        Toast.makeText(
+            context,
+            "이 폰에는 모드 및 루틴이 없어요. 2번 화면 보호기를 쓰세요.",
+            Toast.LENGTH_LONG,
+        ).show()
+    }
+}
+
+private const val ROUTINES_PACKAGE = "com.samsung.android.app.routines"
 
 private fun openNotificationAccess(context: Context) {
     val component = ComponentName(context, NotifListener::class.java).flattenToString()
