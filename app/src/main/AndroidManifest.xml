@@ -10,6 +10,11 @@
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
 
+    <!-- 설정 화면의 [모드 및 루틴 열기]가 삼성 루틴 앱을 찾을 수 있게 -->
+    <queries>
+        <package android:name="com.samsung.android.app.routines" />
+    </queries>
+
     <application
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
