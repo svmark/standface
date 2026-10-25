@@ -69,6 +69,7 @@ gh release create vX.Y.Z /tmp/Standface-X.Y.Z.apk --repo svmark/standface \
 - 베타는 `--prerelease`를 붙여요. 그러면 README의 "최신 버전 받기"는 계속 정식 버전을 가리켜요.
 - 릴리스 노트는 `CHANGELOG.md`에서 옮기고, 서명 인증서 SHA-256과 APK SHA-256을 함께 적어요.
 - 릴리스 전에 `standface-repo/`의 README·스크린샷·CHANGELOG를 이 저장소와 맞추고 그 저장소에 푸시해요.
+- standface README는 `README.src.md`를 고치고 `python3 scripts/build-readme.py`로 `README.md`를 만들어요(한글 줄바꿈 처리). 직접 `README.md`를 고치지 않아요.
 
 ## 7. 올린 파일 확인
 
