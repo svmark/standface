@@ -24,6 +24,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.window.layout.WindowInfoTracker
 import com.marksnd.foldstandby.data.SettingsStore
+import com.marksnd.foldstandby.data.inUse
 import com.marksnd.foldstandby.data.isLocked
 import com.marksnd.foldstandby.data.rememberBattery
 import com.marksnd.foldstandby.ui.Posture
@@ -153,7 +154,7 @@ class StandbyActivity : ComponentActivity() {
     }
 
     private fun skipRoutineLaunch(intent: Intent): Boolean =
-        openedByRoutine(intent) && SettingsStore(this).read().routineOnlyLocked && !isLocked(this)
+        openedByRoutine(intent) && SettingsStore(this).read().routineOnlyLocked && inUse(this)
 
     private fun hideSystemBars() {
         // 위 상태 표시줄은 늘 숨긴다. 아래는 내비게이션 방식에 따라 다르다.

@@ -11,7 +11,7 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.BatteryManager
-import android.os.Build
+import android.os.PowerManager
 import android.provider.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
@@ -102,29 +102,33 @@ fun rememberIsDark(): State<Boolean> {
 }
 
 /**
- * 폰이 잠겨 있는지. 잠긴 동안에는 일정 제목·사진처럼 남이 보면 안 되는 것을 숨긴다.
- * Android 13부터는 잠금 상태가 바뀔 때 알려 주고, 그 전에는 1초마다 확인한다.
+ * 폰이 잠겨 있는지(PIN·패턴·지문 같은 보안 잠금). 잠긴 동안에는 일정 제목·사진처럼 남이 보면 안 되는 것을 숨긴다.
+ * 밀어서 열기만 있는 폰은 누구나 열 수 있으니 잠기지 않은 것으로 본다.
+ * 잠금 상태가 바뀔 때 알려 주는 기능(addKeyguardLockedStateListener)은 시스템 앱 권한이 필요해서 1초마다 확인한다.
  */
 @Composable
 fun rememberLocked(): State<Boolean> {
     val context = LocalContext.current
     return produceState(isLocked(context)) {
-        val km = context.getSystemService(KeyguardManager::class.java) ?: return@produceState
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            val listener = KeyguardManager.KeyguardLockedStateListener { value = it }
-            km.addKeyguardLockedStateListener(ContextCompat.getMainExecutor(context), listener)
-            awaitDispose { km.removeKeyguardLockedStateListener(listener) }
-        } else {
-            while (isActive) {
-                value = km.isKeyguardLocked
-                delay(1000)
-            }
+        while (isActive) {
+            value = isLocked(context)
+            delay(1000)
         }
     }
 }
 
 fun isLocked(context: Context): Boolean =
-    context.getSystemService(KeyguardManager::class.java)?.isKeyguardLocked ?: false
+    context.getSystemService(KeyguardManager::class.java)?.let { it.isKeyguardLocked && it.isDeviceSecure } ?: false
+
+/**
+ * 폰을 쓰는 중인지: 화면이 켜져 있고 잠금화면이 떠 있지 않다. 밀어서 열기 잠금화면도 '쓰지 않는 중'으로 본다.
+ * 루틴이 충전 때 앱을 열었을 때, 쓰는 중이면 쓰던 앱(내비게이션 등)을 밀어내지 않으려고 쓴다.
+ */
+fun inUse(context: Context): Boolean {
+    val screenOn = context.getSystemService(PowerManager::class.java)?.isInteractive ?: true
+    val keyguard = context.getSystemService(KeyguardManager::class.java)?.isKeyguardLocked ?: false
+    return screenOn && !keyguard
+}
 
 /** 폰에 설정된 화면 밝기(0~1). 읽지 못하면 null. 자동 밝기일 때는 마지막으로 정해진 값이다. */
 fun systemBrightness(context: Context): Float? = runCatching {
