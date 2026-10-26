@@ -23,6 +23,8 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Fill
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import com.marksnd.foldstandby.data.AgendaState
@@ -30,12 +32,9 @@ import com.marksnd.foldstandby.data.Sky
 import com.marksnd.foldstandby.data.WeatherState
 import com.marksnd.foldstandby.data.skyLabel
 import com.marksnd.foldstandby.data.skyOf
-import java.time.Instant
-import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 private val HM = DateTimeFormatter.ofPattern("HH:mm")
-private fun hm(ms: Long) = Instant.ofEpochMilli(ms).atZone(ZoneId.systemDefault()).format(HM)
 
 /**
  * 날씨 보기: 화면 전체를 쓴다.
@@ -55,7 +54,8 @@ fun WeatherPage(state: WeatherState) {
             } else {
                 val w = state.weather
                 val sky = skyOf(w.code)
-                Column(Modifier.fillMaxSize().padding(horizontal = maxWidth * 0.05f, vertical = maxHeight * 0.06f)) {
+                // 바깥에 번인 방지 여백(16dp)이 따로 있어서 안쪽 여백은 작게 둔다.
+                Column(Modifier.fillMaxSize().padding(horizontal = maxWidth * 0.03f, vertical = maxHeight * 0.025f)) {
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Label(w.place, u * 0.075f, p.accent)
                         Spacer(Modifier.weight(1f))
@@ -65,21 +65,21 @@ fun WeatherPage(state: WeatherState) {
                         )
                     }
                     Row(Modifier.fillMaxWidth().weight(1f), verticalAlignment = Alignment.CenterVertically) {
-                        SkyIcon(sky, w.isDay, Modifier.fillMaxHeight(0.78f).aspectRatio(1f))
+                        SkyIcon(sky, w.isDay, Modifier.fillMaxHeight(0.7f).aspectRatio(1f))
                         Spacer(Modifier.width(u * 0.03f))
-                        Label("${w.temp}°", u * 0.34f, p.primary, weight = FontWeight.Light)
+                        Label("${deg(w.temp)}°", u * 0.34f, p.primary, weight = FontWeight.Light)
                         Spacer(Modifier.width(u * 0.05f))
                         Column(Modifier.weight(1f), horizontalAlignment = Alignment.End) {
                             Label(skyLabel(sky, korean), u * 0.075f, p.primary, weight = FontWeight.SemiBold, align = TextAlign.End, maxLines = 2)
                             // 한국어는 "최고 · 최저"가 길어 한 줄에 들어가지 않으므로 두 줄로 나눈다.
                             if (korean) {
-                                Label("최고 ${w.high}°", u * 0.06f, p.secondary, weight = FontWeight.Medium)
-                                Label("최저 ${w.low}°", u * 0.06f, p.secondary, weight = FontWeight.Medium)
+                                Label("최고 ${deg(w.high)}°", u * 0.06f, p.secondary, weight = FontWeight.Medium)
+                                Label("최저 ${deg(w.low)}°", u * 0.06f, p.secondary, weight = FontWeight.Medium)
                             } else {
-                                Label("H ${w.high}° · L ${w.low}°", u * 0.06f, p.secondary, weight = FontWeight.Medium)
+                                Label("H ${deg(w.high)}° · L ${deg(w.low)}°", u * 0.06f, p.secondary, weight = FontWeight.Medium)
                             }
                             Spacer(Modifier.height(u * 0.03f))
-                            Label(if (korean) "체감 ${w.feelsLike}°" else "Feels ${w.feelsLike}°", u * 0.05f, p.dim, weight = FontWeight.Medium)
+                            Label(if (korean) "체감 ${deg(w.feelsLike)}°" else "Feels ${deg(w.feelsLike)}°", u * 0.05f, p.dim, weight = FontWeight.Medium)
                             Label(if (korean) "습도 ${w.humidity}%" else "Humidity ${w.humidity}%", u * 0.05f, p.dim, weight = FontWeight.Medium)
                             Label(if (korean) "바람 ${w.windMs}m/s" else "Wind ${w.windMs} m/s", u * 0.05f, p.dim, weight = FontWeight.Medium)
                         }
@@ -97,7 +97,7 @@ fun WeatherPage(state: WeatherState) {
                                     u * 0.045f, p.dim, weight = FontWeight.Medium,
                                 )
                                 SkyIcon(skyOf(h.code), h.isDay, Modifier.size(u * 0.11f))
-                                Label("${h.temp}°", u * 0.06f, p.primary, weight = FontWeight.SemiBold)
+                                Label("${deg(h.temp)}°", u * 0.06f, p.primary, weight = FontWeight.SemiBold)
                             }
                         }
                     }
@@ -125,17 +125,17 @@ private fun CompactWeather(state: WeatherState.Ready) {
             Row(Modifier.fillMaxWidth().weight(1f), verticalAlignment = Alignment.CenterVertically) {
                 SkyIcon(sky, w.isDay, Modifier.size(u * 0.36f))
                 Spacer(Modifier.width(u * 0.04f))
-                Label("${w.temp}°", u * 0.3f, p.primary, weight = FontWeight.Light)
+                Label("${deg(w.temp)}°", u * 0.3f, p.primary, weight = FontWeight.Light)
             }
             Label(skyLabel(sky, korean), u * 0.075f, p.primary, weight = FontWeight.SemiBold)
             Label(
-                if (korean) "최고 ${w.high}° · 최저 ${w.low}°" else "H ${w.high}° · L ${w.low}°",
+                if (korean) "최고 ${deg(w.high)}° · 최저 ${deg(w.low)}°" else "H ${deg(w.high)}° · L ${deg(w.low)}°",
                 u * 0.06f, p.secondary, weight = FontWeight.Medium,
             )
             Spacer(Modifier.height(u * 0.02f))
             Label(
-                if (korean) "체감 ${w.feelsLike}° · 습도 ${w.humidity}% · 바람 ${w.windMs}m/s"
-                else "Feels ${w.feelsLike}° · ${w.humidity}% · ${w.windMs} m/s",
+                if (korean) "체감 ${deg(w.feelsLike)}° · 습도 ${w.humidity}% · 바람 ${w.windMs}m/s"
+                else "Feels ${deg(w.feelsLike)}° · ${w.humidity}% · ${w.windMs} m/s",
                 u * 0.048f, p.dim, weight = FontWeight.Medium,
             )
             Spacer(Modifier.height(u * 0.06f))
@@ -151,7 +151,7 @@ private fun CompactWeather(state: WeatherState.Ready) {
                             u * 0.05f, p.dim, weight = FontWeight.Medium,
                         )
                         SkyIcon(skyOf(h.code), h.isDay, Modifier.size(u * 0.11f))
-                        Label("${h.temp}°", u * 0.065f, p.primary, weight = FontWeight.SemiBold)
+                        Label("${deg(h.temp)}°", u * 0.065f, p.primary, weight = FontWeight.SemiBold)
                     }
                 }
             }
@@ -165,7 +165,10 @@ fun SkyIcon(sky: Sky, isDay: Boolean, modifier: Modifier) {
     Canvas(modifier) {
         val s = size.minDimension
         val sunC = Offset(s * 0.38f, s * 0.36f)
-        fun cloud(color: Color, dy: Float = 0f) {
+        // 쉬는 화면에서는 꽉 찬 해를 고리로, 구름은 어두운 색으로 그린다(번인 방지).
+        val sunStyle = if (p.quiet) Stroke(s * 0.04f) else Fill
+        fun cloud(base: Color, dy: Float = 0f) {
+            val color = if (p.quiet) p.dim else base
             drawCircle(color, s * 0.17f, Offset(s * 0.42f, s * 0.55f + dy))
             drawCircle(color, s * 0.22f, Offset(s * 0.6f, s * 0.48f + dy))
             drawRoundRect(color, Offset(s * 0.25f, s * 0.55f + dy), Size(s * 0.6f, s * 0.17f), CornerRadius(s * 0.09f))
@@ -177,7 +180,7 @@ fun SkyIcon(sky: Sky, isDay: Boolean, modifier: Modifier) {
         }
         when (sky) {
             Sky.Clear -> if (!isDay) moon(Offset(s / 2, s / 2), s * 0.3f) else {
-                drawCircle(p.accent, s * 0.22f, Offset(s / 2, s / 2))
+                drawCircle(p.accent, s * 0.22f, Offset(s / 2, s / 2), style = sunStyle)
                 for (i in 0 until 8) {
                     val a = (i * Math.PI / 4).toFloat()
                     drawLine(
@@ -189,7 +192,7 @@ fun SkyIcon(sky: Sky, isDay: Boolean, modifier: Modifier) {
                 }
             }
             Sky.PartlyCloudy -> {
-                if (isDay) drawCircle(p.accent, s * 0.18f, sunC) else moon(sunC, s * 0.2f)
+                if (isDay) drawCircle(p.accent, s * 0.18f, sunC, style = sunStyle) else moon(sunC, s * 0.2f)
                 cloud(p.primary, s * 0.08f)
             }
             Sky.Cloudy -> cloud(p.primary)
@@ -242,8 +245,8 @@ fun AgendaStrip(agenda: AgendaState, modifier: Modifier = Modifier) {
             }
             upcoming.forEach { e ->
                 Row(Modifier.weight(1f, fill = false).fillMaxHeight(), verticalAlignment = Alignment.CenterVertically) {
-                    Label(hm(e.begin), u, p.accent)
-                    Label("  " + e.title, u, p.primary, weight = FontWeight.Medium)
+                    Label(eventTime(e.begin, korean), u, p.accent)
+                    Label("  " + eventTitle(e.title, LocalLocked.current, korean), u, p.secondary, weight = FontWeight.Medium)
                 }
             }
         }

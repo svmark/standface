@@ -135,7 +135,8 @@ fun MonthGrid(today: LocalDate, modifier: Modifier) {
             Row {
                 weekHeaders(korean, mondayFirst).forEachIndexed { col, d ->
                     Box(Modifier.weight(1f).height(cellH), contentAlignment = Alignment.Center) {
-                        Label(d, fs, if (col in weekendCols) p.dim else p.primary)
+                        // 하루 종일 바뀌지 않는 글자라 흰색 대신 회색(번인 방지). 주말은 더 어둡게.
+                        Label(d, fs, if (col in weekendCols) p.dim else p.secondary)
                     }
                 }
             }
@@ -154,7 +155,7 @@ fun MonthGrid(today: LocalDate, modifier: Modifier) {
                                     when {
                                         isToday -> p.onAccent
                                         col in weekendCols -> p.dim
-                                        else -> p.primary
+                                        else -> p.secondary
                                     },
                                 )
                             }

@@ -1,6 +1,7 @@
 package com.marksnd.foldstandby.data
 
 import android.app.AlarmManager
+import android.app.KeyguardManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -10,6 +11,8 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.BatteryManager
+import android.os.Build
+import android.provider.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.produceState
@@ -97,3 +100,33 @@ fun rememberIsDark(): State<Boolean> {
         awaitDispose { sm.unregisterListener(listener) }
     }
 }
+
+/**
+ * 폰이 잠겨 있는지. 잠긴 동안에는 일정 제목·사진처럼 남이 보면 안 되는 것을 숨긴다.
+ * Android 13부터는 잠금 상태가 바뀔 때 알려 주고, 그 전에는 1초마다 확인한다.
+ */
+@Composable
+fun rememberLocked(): State<Boolean> {
+    val context = LocalContext.current
+    return produceState(isLocked(context)) {
+        val km = context.getSystemService(KeyguardManager::class.java) ?: return@produceState
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val listener = KeyguardManager.KeyguardLockedStateListener { value = it }
+            km.addKeyguardLockedStateListener(ContextCompat.getMainExecutor(context), listener)
+            awaitDispose { km.removeKeyguardLockedStateListener(listener) }
+        } else {
+            while (isActive) {
+                value = km.isKeyguardLocked
+                delay(1000)
+            }
+        }
+    }
+}
+
+fun isLocked(context: Context): Boolean =
+    context.getSystemService(KeyguardManager::class.java)?.isKeyguardLocked ?: false
+
+/** 폰에 설정된 화면 밝기(0~1). 읽지 못하면 null. 자동 밝기일 때는 마지막으로 정해진 값이다. */
+fun systemBrightness(context: Context): Float? = runCatching {
+    Settings.System.getInt(context.contentResolver, Settings.System.SCREEN_BRIGHTNESS) / 255f
+}.getOrNull()?.coerceIn(0f, 1f)

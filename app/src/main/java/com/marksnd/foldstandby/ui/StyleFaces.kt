@@ -24,6 +24,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Fill
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.PlatformTextStyle
@@ -56,10 +58,15 @@ fun twelveHour(t: LocalTime, korean: Boolean): Pair<String, String> {
     return "$h:%02d".format(t.minute) to ap
 }
 
-private fun eventTime(ms: Long, korean: Boolean): String {
+/** 일정 시각: 한국어 "오후 2:30", 영어 "2:30 PM". */
+fun eventTime(ms: Long, korean: Boolean): String {
     val (hm, ap) = twelveHour(Instant.ofEpochMilli(ms).atZone(ZoneId.systemDefault()).toLocalTime(), korean)
     return if (korean) "$ap $hm" else "$hm $ap"
 }
+
+/** 잠긴 동안에는 일정 제목 대신 "일정"만 보여준다. 시각과 개수는 그대로. */
+fun eventTitle(title: String, locked: Boolean, korean: Boolean): String =
+    if (locked) (if (korean) "일정" else "Event") else title
 
 @Composable
 private fun rememberClockText(): Pair<String, String> {
@@ -147,7 +154,12 @@ private fun BigTime(hm: String, ap: String, digitSize: Dp, available: Dp) {
         Text(
             text = hm,
             modifier = Modifier.alignByBaseline(),
-            style = base.copy(fontSize = with(density) { size.toSp() }, brush = brush),
+            style = base.copy(
+                fontSize = with(density) { size.toSp() },
+                brush = brush,
+                // 쉬는 화면에서는 굵은 숫자를 외곽선만 그려 켜지는 픽셀을 크게 줄인다(번인 방지).
+                drawStyle = if (p.quiet) Stroke(with(density) { OutlineWidth.toPx() }) else Fill,
+            ),
             maxLines = 1,
         )
         Spacer(Modifier.width(size * 0.06f))
@@ -176,7 +188,7 @@ private fun DigitalInfo(
         Row(verticalAlignment = Alignment.CenterVertically) {
             SkyIcon(sky, weather.weather.isDay, Modifier.size(lineSize * 1.3f))
             Spacer(Modifier.width(lineSize * 0.3f))
-            Label("${weather.weather.temp}° ${skyLabel(sky, korean)}", lineSize, p.secondary, weight = FontWeight.ExtraBold, family = Rounded)
+            Label("${deg(weather.weather.temp)}° ${skyLabel(sky, korean)}", lineSize, p.secondary, weight = FontWeight.ExtraBold, family = Rounded)
         }
     }
     if (nextAlarm != null) {
@@ -289,7 +301,7 @@ private fun ColumnScope.AgendaColumn(today: LocalDate, agenda: AgendaState, s: A
                     val time = if (e.allDay) (if (korean) "종일" else "All day") else eventTime(e.begin, korean)
                     // +N 줄을 둘 높이가 없으면 마지막 줄 끝에 붙인다.
                     val inlineMore = if (i == fit.tomorrowShow - 1 && hidden > 0 && !fit.tomorrowMoreLine) "  +$hidden" else ""
-                    Label("$time  ${e.title}$inlineMore", s.sub * 1.1f, p.secondary, Modifier.padding(top = s.sub * 0.25f), weight = FontWeight.Bold, family = Rounded)
+                    Label("$time  ${eventTitle(e.title, LocalLocked.current, korean)}$inlineMore", s.sub * 1.1f, p.secondary, Modifier.padding(top = s.sub * 0.25f), weight = FontWeight.Bold, family = Rounded)
                 }
                 if (fit.tomorrowMoreLine) MoreCount(hidden, s, korean)
             }
@@ -388,7 +400,7 @@ private fun EventLine(e: AgendaEvent, s: AgendaSizes, korean: Boolean) {
         Box(Modifier.width(s.sub * 0.3f).height(s.title * 1.9f).background(bar, RoundedCornerShape(s.sub)))
         Spacer(Modifier.width(s.sub * 0.6f))
         Column {
-            Label(e.title, s.title, p.primary, weight = FontWeight.ExtraBold, family = Rounded)
+            Label(eventTitle(e.title, LocalLocked.current, korean), s.title, p.primary, weight = FontWeight.ExtraBold, family = Rounded)
             Label(
                 if (e.allDay) (if (korean) "종일" else "All day") else "${eventTime(e.begin, korean)} – ${eventTime(e.end, korean)}",
                 s.sub, p.dim, weight = FontWeight.Bold, family = Rounded,
@@ -427,7 +439,7 @@ private fun WeekStrip(today: LocalDate, s: AgendaSizes) {
                     when {
                         isToday -> p.onAccent
                         weekend -> p.dim
-                        else -> p.primary
+                        else -> p.secondary
                     },
                     weight = FontWeight.Black, family = Rounded,
                 )

@@ -5,6 +5,8 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.ImageBitmap
@@ -27,6 +29,10 @@ class FixedSources(
     private val media: MediaState = MediaState.Idle,
     /** 다음 알람까지 남은 분. 15분 안이면 알람 전 빛이 켜진다. */
     private val alarmInMinutes: Long? = null,
+    /** 폰이 잠겨 있는지. 잠기면 일정 제목·사진을 숨긴다. */
+    private val locked: Boolean = false,
+    /** 모든 기온에 더할 값(섭씨). 화씨 세 자리 숫자를 찍을 때 쓴다. */
+    private val hotter: Int = 0,
 ) : StandbySources {
     val zone: ZoneId = ZoneId.of("Asia/Seoul")
     val nowTime: ZonedDateTime = ZonedDateTime.of(2026, 10, 25, 9, 41, 7, 0, zone)
@@ -55,10 +61,10 @@ class FixedSources(
 
     val weatherState = WeatherState.Ready(
         Weather(
-            place = "Seoul", temp = 15, code = 0, isDay = true, high = 23, low = 10,
-            feelsLike = 14, humidity = 67, windMs = 1,
+            place = "Seoul", temp = 15 + hotter, code = 0, isDay = true, high = 23 + hotter, low = 10 + hotter,
+            feelsLike = 14 + hotter, humidity = 67, windMs = 1,
             hourly = (0 until 7).map { i ->
-                HourlyWeather(LocalDateTime.of(day, java.time.LocalTime.of(10 + i, 0)), listOf(13, 16, 19, 21, 22, 23, 23)[i], 0, true)
+                HourlyWeather(LocalDateTime.of(day, java.time.LocalTime.of(10 + i, 0)), listOf(13, 16, 19, 21, 22, 23, 23)[i] + hotter, 0, true)
             },
             fetchedAt = LocalDateTime.of(day, java.time.LocalTime.of(9, 40)),
         ),
@@ -68,7 +74,13 @@ class FixedSources(
 
     @Composable private fun <T> fixed(value: T): State<T> = remember { mutableStateOf(value) }
 
-    @Composable override fun now(smooth: Boolean) = fixed(nowMs)
+    /**
+     * 화면을 그린 뒤 흐른 분. 넘기기 같은 동작을 마친 다음 15로 올리면, 그동안 아무도 만지지 않은 것이 되어
+     * 낮에는 쉬는 화면이 된다(시계도 그만큼 간다).
+     */
+    val minutesLater = mutableLongStateOf(0L)
+
+    @Composable override fun now(smooth: Boolean): State<Long> = remember { derivedStateOf { nowMs + minutesLater.longValue * 60_000 } }
     @Composable override fun today() = fixed(day)
     @Composable override fun weather(korean: Boolean): State<WeatherState> = fixed(weatherState)
     @Composable override fun agenda(refreshKey: Int) = fixed(agendaState)
@@ -77,10 +89,11 @@ class FixedSources(
     @Composable override fun nextAlarm() = fixed(alarmInMinutes?.let { nowMs + it * 60_000 })
     @Composable override fun isDark() = fixed(dark)
     @Composable override fun lastMotion(enabled: Boolean) = fixed(nowMs)
-    @Composable override fun pixelShift(stepPx: Int) = fixed(IntOffset.Zero)
+    @Composable override fun pixelShift(rangePx: Int) = fixed(IntOffset.Zero)
+    @Composable override fun locked() = fixed(locked)
 
     override suspend fun loadPhoto(context: Context, uri: Uri, maxSide: Int): ImageBitmap? =
         javaClass.getResourceAsStream("/sample-photo.jpg")?.use { BitmapFactory.decodeStream(it)?.asImageBitmap() }
 
-    override fun currentTimeMillis() = nowMs
+    override fun currentTimeMillis() = nowMs + minutesLater.longValue * 60_000
 }

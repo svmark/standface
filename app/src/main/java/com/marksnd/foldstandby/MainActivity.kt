@@ -149,6 +149,15 @@ private fun SetupScreen() {
                         "메뉴가 안 보이면 설정 검색창에서 '화면 보호기'를 찾으세요.",
                     action = "화면 보호기 설정 열기",
                 ) { openDreamSettings(context) }
+                ChoiceRow("폰을 사용하는 중에는 루틴으로 열지 않기", listOf("켜기", "끄기"), if (settings.routineOnlyLocked) 0 else 1) {
+                    store.update { putBoolean(SettingsStore.ROUTINE_ONLY_LOCKED, it == 0) }
+                }
+                Text(
+                    "잠금이 풀린 채 다른 앱을 사용하는 중이면 루틴이 Standface를 열어도 바로 닫고 사용하던 앱으로 돌아가요. " +
+                        "차에서 무선 충전하며 내비게이션을 볼 때 유용해요. 화면을 끈 채 충전기에 올리면 잠금화면 위에 바로 떠요.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
 
                 SectionTitle("권한")
                 PermissionCard("캘린더", "오늘 일정 위젯과 아래 일정 띠", calendarOk) {
@@ -178,6 +187,9 @@ private fun SetupScreen() {
                 }
                 ChoiceRow("야간 모드", listOf("자동 (어두우면)", "항상", "끄기"), settings.nightMode.ordinal) {
                     store.update { putInt(SettingsStore.NIGHT, NightMode.entries[it].ordinal) }
+                }
+                ChoiceRow("온도 단위", listOf("섭씨 °C", "화씨 °F"), if (settings.fahrenheit) 1 else 0) {
+                    store.update { putBoolean(SettingsStore.FAHRENHEIT, it == 1) }
                 }
 
                 SectionTitle("펼친 화면 오른쪽 스택")
@@ -212,12 +224,14 @@ private fun SetupScreen() {
                 ChoiceRow("알람 15분 전부터 은은한 빛", listOf("켜기", "끄기"), if (settings.alarmGlow) 0 else 1) {
                     store.update { putBoolean(SettingsStore.ALARM_GLOW, it == 0) }
                 }
-                ChoiceRow("밤에 가만히 두면 어둡게, 움직이면 깨우기", listOf("켜기", "끄기"), if (settings.wakeOnMotion) 0 else 1) {
+                ChoiceRow("가만히 두면 쉬기", listOf("켜기", "끄기"), if (settings.wakeOnMotion) 0 else 1) {
                     store.update { putBoolean(SettingsStore.WAKE_ON_MOTION, it == 0) }
                 }
                 Text(
-                    "빛은 폰 시계 앱의 다음 알람을 따라가요. 알람이 울리는 동안 빛을 유지하려면 알림 접근이 필요해요. " +
-                        "화면이 켜져 있어야 하므로 충전 중에 쓰세요.",
+                    "가만히 두면 낮에는 10분 뒤 화면을 어둡게 하고 큰 숫자를 외곽선으로 바꿔요. 밤에는 1분 뒤 거의 꺼요. " +
+                        "폰을 건드리거나 화면을 만지면 다시 켜져요. 화면에 자국이 남는 번인을 줄여 줘요.\n" +
+                        "빛은 폰 시계 앱의 다음 알람을 따라가요. 알람이 울리는 동안 빛을 유지하려면 알림 접근이 필요해요. " +
+                        "화면이 켜져 있어야 하므로 충전 중에 사용하세요.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -320,7 +334,7 @@ private fun openRoutines(context: Context) {
         } catch (_: ActivityNotFoundException) {
             Toast.makeText(
                 context,
-                "이 폰에는 모드 및 루틴이 없어요. 2번 화면 보호기를 쓰세요.",
+                "이 폰에는 모드 및 루틴이 없어요. 2번 화면 보호기를 사용하세요.",
                 Toast.LENGTH_LONG,
             ).show()
         }

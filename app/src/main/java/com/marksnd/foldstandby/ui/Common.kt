@@ -12,7 +12,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Fill
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.unit.dp
+import kotlin.math.roundToInt
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.TextStyle
@@ -38,6 +43,8 @@ data class Palette(
     val card: Color,
     val onAccent: Color,
     val night: Boolean,
+    /** 쉬는 화면: 한 단계 어둡고, 큰 글자는 외곽선으로 그린다(번인 방지). */
+    val quiet: Boolean = false,
 )
 
 // 첫 번째가 기본값. 아이폰 듀오 스탠바이 사진의 주황.
@@ -50,7 +57,8 @@ fun dayPalette(accent: Color) = Palette(
     secondary = Color(0xFFA9A5B4),
     dim = Color(0xFF6E6B76),
     tick = Color(0xFFBDB9C6),
-    card = Color(0xFF1C1C1E),
+    // 펼친 화면 카드처럼 넓은 면이라 거의 검정에 가깝게 둔다(번인 방지).
+    card = Color(0xFF141416),
     onAccent = if (accent.luminance() > 0.6f) Color.Black else Color.White,
     night = false,
 )
@@ -66,6 +74,21 @@ val NightPalette = Palette(
     night = true,
 )
 
+/** 쉬는 화면 색: 모든 색을 한 단계 어둡게. 밝기도 따로 낮춘다. */
+fun Palette.rested(): Palette {
+    fun Color.down() = lerp(this, Color.Black, 0.3f)
+    return copy(
+        accent = accent.down(), primary = primary.down(), secondary = secondary.down(),
+        dim = dim.down(), tick = tick.down(), quiet = true,
+    )
+}
+
+/** 이 크기 이상 글자는 쉬는 화면에서 속이 빈 외곽선으로 그린다. 디지털 시각, 큰 날짜, 큰 기온 정도. */
+val OutlineFrom = 40.dp
+
+/** 외곽선 굵기. */
+val OutlineWidth = 3.dp
+
 /** 디지털·달력 스타일에 쓰는 둥근 굵은 글꼴(Nunito, SIL OFL). 한글은 시스템 글꼴로 대신 그린다. */
 @OptIn(ExperimentalTextApi::class)
 val Rounded = FontFamily(
@@ -77,6 +100,14 @@ val Rounded = FontFamily(
 val LocalPalette = staticCompositionLocalOf { dayPalette(Accents[0]) }
 val LocalKorean = staticCompositionLocalOf { false }
 val LocalMondayFirst = staticCompositionLocalOf { true }
+val LocalFahrenheit = staticCompositionLocalOf { false }
+
+/** 폰이 잠겨 있으면 true. 일정 제목·사진처럼 남이 보면 안 되는 것을 숨긴다. */
+val LocalLocked = staticCompositionLocalOf { false }
+
+/** 섭씨 정수를 설정한 단위로 바꾼다. 단위 글자는 붙이지 않는다(뒤에 °만). */
+@Composable
+fun deg(celsius: Int): Int = if (LocalFahrenheit.current) (celsius * 9 / 5.0 + 32).roundToInt() else celsius
 
 /** 글자 크기를 dp로 받아 화면 크기에 비례하게 맞춘다(시스템 글꼴 배율 무시). */
 @Composable
@@ -91,7 +122,9 @@ fun Label(
     family: FontFamily? = null,
     letterSpacing: TextUnit = TextUnit.Unspecified,
 ) {
-    val sp = with(LocalDensity.current) { size.toSp() }
+    val density = LocalDensity.current
+    val sp = with(density) { size.toSp() }
+    val outline = LocalPalette.current.quiet && size >= OutlineFrom
     Text(
         text = text,
         modifier = modifier,
@@ -107,6 +140,7 @@ fun Label(
         style = TextStyle(
             platformStyle = PlatformTextStyle(includeFontPadding = false),
             lineHeightStyle = LineHeightStyle(LineHeightStyle.Alignment.Center, LineHeightStyle.Trim.Both),
+            drawStyle = if (outline) Stroke(with(density) { OutlineWidth.toPx() }) else Fill,
         ),
     )
 }

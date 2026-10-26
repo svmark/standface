@@ -29,6 +29,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.platform.LocalContext
+import com.marksnd.foldstandby.data.systemBrightness
+import kotlinx.coroutines.delay
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -42,6 +46,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.marksnd.foldstandby.data.AgendaState
 import com.marksnd.foldstandby.data.NightMode
@@ -68,10 +73,25 @@ private const val LONG_PRESS_MS = 700L
 /** 밤에 이만큼 움직임도 터치도 없으면 화면을 거의 끈다. */
 private const val SLEEP_AFTER_MS = 60_000L
 
+/** 낮에 이만큼 움직임도 터치도 새 알림도 없으면 쉬는 화면(어둡게, 큰 글자는 외곽선)으로 바꾼다. */
+internal const val REST_AFTER_MS = 10 * 60_000L
+
+/** 쉬는 화면의 창 밝기. 폰 밝기가 이보다 낮으면 폰 밝기를 따른다(어두운 방에서 더 밝아지지 않게). */
+private const val REST_BRIGHTNESS = 0.3f
+
+/** 화면을 옮기는 범위(±). 플립 커버처럼 작은 화면(짧은 변 360dp 미만)은 글자가 너무 작아지지 않게 반만. */
+private val SHIFT_RANGE = 16.dp
+private val SHIFT_RANGE_SMALL = 8.dp
+
+internal fun shiftRange(shortSide: Dp) = if (shortSide < 360.dp) SHIFT_RANGE_SMALL else SHIFT_RANGE
+
 /** 알람 전 빛의 색. 해 뜨기 전 하늘 같은 호박색. */
 private val Amber = Color(0xFFFFA94D)
 
 private const val PAGE_COUNT = 3
+
+/** 처음 쉴 때 보여주는 안내가 떠 있는 시간. */
+private const val REST_HINT_MS = 8_000L
 
 /**
  * 스탠바이 화면 전체. Activity와 화면 보호기가 같이 쓴다.
@@ -83,6 +103,8 @@ fun StandbyScreen(
     onOpenSettings: () -> Unit,
     onBrightness: (Float?) -> Unit,
     openCount: Int = 0,
+    /** 쉬거나(낮) 거의 꺼질 때(밤) true. 앱은 이때 아래 내비게이션 막대도 숨긴다. */
+    onRest: (Boolean) -> Unit = {},
 ) {
     val sources = LocalStandbySources.current
     val store = rememberSettingsStore()
@@ -101,12 +123,22 @@ fun StandbyScreen(
         NightMode.Off -> false
     }
 
-    // 밤에 가만히 두면 거의 끄고, 움직이거나 만지면 다시 켠다.
-    val lastMotion by sources.lastMotion(enabled = settings.wakeOnMotion && night)
+    // 가만히 두면 쉬기: 밤에는 1분 뒤 거의 끄고, 낮에는 10분 뒤 어둡게(쉬는 화면). 움직이거나 만지면 다시 켠다.
+    // 새 알림이 오거나 음악이 재생 중이면 쉬지 않는다.
+    val lastMotion by sources.lastMotion(enabled = settings.wakeOnMotion)
     var lastTouch by remember { mutableLongStateOf(sources.currentTimeMillis()) }
     val nightSince = remember(night) { sources.currentTimeMillis() }
-    val asleep = settings.wakeOnMotion && night && tick - maxOf(lastMotion, lastTouch, nightSince) > SLEEP_AFTER_MS
+    val latestNotification by NotificationBus.latest.collectAsState()
+    val media by sources.nowPlaying()
+    val playing = (media as? MediaState.Playing)?.now?.playing == true
+    val lastActive = maxOf(lastMotion, lastTouch, nightSince, latestNotification?.postedAt ?: 0L)
+    val asleep = settings.wakeOnMotion && night && tick - lastActive > SLEEP_AFTER_MS
+    val rested = settings.wakeOnMotion && !night && glow == null && !playing && tick - lastActive > REST_AFTER_MS
     val asleepNow by rememberUpdatedState(asleep)
+    val restingNow by rememberUpdatedState(rested)
+    LaunchedEffect(asleep || rested) { onRest(asleep || rested) }
+    val locked by sources.locked()
+    val context = LocalContext.current
     val openSettings by rememberUpdatedState(onOpenSettings)
     val haptic = LocalHapticFeedback.current
 
@@ -114,18 +146,35 @@ fun StandbyScreen(
         glow != null -> 0.05f + 0.95f * (glow * 20).roundToInt() / 20f // 5% 단위로만 바꾼다
         asleep -> 0f
         night -> 0.01f
+        rested -> minOf(REST_BRIGHTNESS, systemBrightness(context) ?: REST_BRIGHTNESS)
         else -> null
     }
     LaunchedEffect(brightness) { onBrightness(brightness) }
     val sleepShade by animateFloatAsState(if (asleep) 0.93f else 0f, tween(if (asleep) 2000 else 300), label = "sleep")
 
-    val palette = if (night) NightPalette else dayPalette(Accents[settings.accent.coerceIn(Accents.indices)])
-    val shift by sources.pixelShift(with(LocalDensity.current) { 3.dp.roundToPx() })
+    val day = dayPalette(Accents[settings.accent.coerceIn(Accents.indices)])
+    val palette = when {
+        night -> NightPalette
+        rested -> day.rested()
+        else -> day
+    }
+    // 처음 쉬거나 거의 꺼질 때 한 번만 "움직이거나 만지면 다시 켜져요"를 알려 준다.
+    var restHint by remember { mutableStateOf(false) }
+    LaunchedEffect(asleep || rested) {
+        if ((asleep || rested) && !store.restHintSeen) {
+            store.update { putBoolean(SettingsStore.REST_HINT_SEEN, true) }
+            restHint = true
+            delay(REST_HINT_MS)
+            restHint = false
+        }
+    }
 
     CompositionLocalProvider(
         LocalPalette provides palette,
         LocalKorean provides settings.korean,
         LocalMondayFirst provides settings.mondayFirst,
+        LocalFahrenheit provides settings.fahrenheit,
+        LocalLocked provides locked,
     ) {
         val agenda by sources.agenda(openCount)
         val today by sources.today()
@@ -138,8 +187,8 @@ fun StandbyScreen(
                         while (true) {
                             val event = awaitPointerEvent(PointerEventPass.Initial)
                             lastTouch = sources.currentTimeMillis()
-                            // 자는 화면을 깨우는 터치는 넘김·버튼으로 전달하지 않는다.
-                            if (asleepNow) event.changes.forEach { it.consume() }
+                            // 자거나 쉬는 화면을 깨우는 터치는 넘김·버튼으로 전달하지 않는다.
+                            if (asleepNow || restingNow) event.changes.forEach { it.consume() }
                         }
                     }
                 }
@@ -147,7 +196,7 @@ fun StandbyScreen(
                     // 화면을 길게 누르면(움직이지 않고) 설정 화면을 연다. 자는 화면을 깨우는 터치는 제외.
                     awaitEachGesture {
                         val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
-                        if (asleepNow) return@awaitEachGesture
+                        if (asleepNow || restingNow) return@awaitEachGesture
                         val released = withTimeoutOrNull(LONG_PRESS_MS) {
                             while (true) {
                                 val event = awaitPointerEvent(PointerEventPass.Initial)
@@ -170,10 +219,13 @@ fun StandbyScreen(
                 },
         ) {
             val layout = screenLayout(maxWidth, maxHeight, posture)
+            // 화면을 옮기는 범위만큼 가장자리를 비워 두어 옮겨도 잘리지 않게 한다.
+            val range = shiftRange(minOf(maxWidth, maxHeight))
+            val shift by sources.pixelShift(with(LocalDensity.current) { range.roundToPx() })
             if (layout == ScreenLayout.Tabletop) {
                 // 반쯤 접어 세우면 접힘선에서 정확히 반으로 나눈다(화면 가림 여백은 윗면에만).
                 // 윗면은 시계, 아랫면은 날짜와 오늘·내일 일정.
-                Column(Modifier.fillMaxSize().offset { shift }) {
+                Column(Modifier.fillMaxSize().padding(range).offset { shift }) {
                     Box(Modifier.fillMaxWidth().weight(1f).windowInsetsPadding(WindowInsets.displayCutout)) {
                         StandbyPages(store, settings, night, openCount, agenda, nextAlarm, deskBelow = true)
                     }
@@ -186,6 +238,7 @@ fun StandbyScreen(
                     Modifier
                         .fillMaxSize()
                         .windowInsetsPadding(WindowInsets.displayCutout)
+                        .padding(range)
                         .offset { shift },
                 ) {
                     val strip = layout == ScreenLayout.WithAgendaStrip
@@ -209,6 +262,12 @@ fun StandbyScreen(
             }
             if (sleepShade > 0f) {
                 Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = sleepShade)))
+            }
+            if (restHint) {
+                Label(
+                    if (settings.korean) "움직이거나 만지면 다시 켜져요" else "Move or touch to wake",
+                    18.dp, palette.secondary, Modifier.align(Alignment.BottomCenter).padding(bottom = 32.dp),
+                )
             }
         }
     }
@@ -237,7 +296,8 @@ private fun StandbyPages(
     val weather by sources.weather(korean)
     val media by sources.nowPlaying()
     val inner = innerDisplay()
-    val photos by sources.albumPhotos(settings.photoAlbumId.takeIf { showsAlbumPhotos(inner, settings.unfoldedPhotos) })
+    // 잠긴 동안에는 사진을 보여주지 않는다(카드가 빠지고 시계 카드부터).
+    val photos by sources.albumPhotos(settings.photoAlbumId.takeIf { showsAlbumPhotos(inner, settings.unfoldedPhotos) && !LocalLocked.current })
 
     HorizontalPager(pager, Modifier.fillMaxSize()) { page ->
         when (page) {
@@ -321,7 +381,8 @@ fun StyleDots(count: Int, current: Int, modifier: Modifier) {
             verticalArrangement = Arrangement.spacedBy(dot * 1.4f),
         ) {
             repeat(count) { i ->
-                Box(Modifier.size(dot).background(if (i == current) p.primary else p.dim, CircleShape))
+                // 늘 같은 자리에 켜져 있어 흰색 대신 회색(번인 방지).
+                Box(Modifier.size(dot).background(if (i == current) p.secondary else p.dim, CircleShape))
             }
         }
     }

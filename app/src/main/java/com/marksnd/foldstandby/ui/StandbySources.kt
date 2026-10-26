@@ -14,6 +14,7 @@ import com.marksnd.foldstandby.data.rememberAgenda
 import com.marksnd.foldstandby.data.rememberAlbumPhotos
 import com.marksnd.foldstandby.data.rememberIsDark
 import com.marksnd.foldstandby.data.rememberLastMotion
+import com.marksnd.foldstandby.data.rememberLocked
 import com.marksnd.foldstandby.data.rememberNextAlarm
 import com.marksnd.foldstandby.data.rememberNow
 import com.marksnd.foldstandby.data.rememberNowPlaying
@@ -37,7 +38,9 @@ interface StandbySources {
     @Composable fun nextAlarm(): State<Long?>
     @Composable fun isDark(): State<Boolean>
     @Composable fun lastMotion(enabled: Boolean): State<Long>
-    @Composable fun pixelShift(stepPx: Int): State<IntOffset>
+    @Composable fun pixelShift(rangePx: Int): State<IntOffset>
+    /** 폰이 잠겨 있는지. 잠긴 동안 일정 제목·사진을 숨긴다. */
+    @Composable fun locked(): State<Boolean>
     suspend fun loadPhoto(context: Context, uri: Uri, maxSide: Int): ImageBitmap?
     fun currentTimeMillis(): Long
 }
@@ -52,7 +55,8 @@ object LiveSources : StandbySources {
     @Composable override fun nextAlarm() = rememberNextAlarm()
     @Composable override fun isDark() = rememberIsDark()
     @Composable override fun lastMotion(enabled: Boolean) = rememberLastMotion(enabled)
-    @Composable override fun pixelShift(stepPx: Int) = rememberPixelShift(stepPx)
+    @Composable override fun pixelShift(rangePx: Int) = rememberPixelShift(rangePx)
+    @Composable override fun locked() = rememberLocked()
     override suspend fun loadPhoto(context: Context, uri: Uri, maxSide: Int) = loadPhotoFromStore(context, uri, maxSide)
     override fun currentTimeMillis() = System.currentTimeMillis()
 }

@@ -54,6 +54,8 @@ class StandbyScreenshotTest {
             putBoolean(SettingsStore.SETUP_SEEN, true)
             putLong(SettingsStore.PHOTO_ALBUM_ID, 1L)
             putString(SettingsStore.PHOTO_ALBUM_NAME, "Demo")
+            // 처음 쉴 때 한 번 뜨는 안내는 찍지 않는다.
+            putBoolean(SettingsStore.REST_HINT_SEEN, true)
         }
     }
 
@@ -62,10 +64,14 @@ class StandbyScreenshotTest {
         posture: Posture = Posture.Flat,
         sources: FixedSources = FixedSources(),
         english: Boolean = false,
+        fahrenheit: Boolean = false,
+        /** 동작을 마친 뒤 아무도 만지지 않고 15분이 지난 화면(낮에는 쉬는 화면)을 찍는다. */
+        rested: Boolean = false,
         gesture: (() -> Unit)? = null,
     ) {
         // 기본은 한국어. 영어 화면도 몇 장 함께 지킨다.
         if (english) SettingsStore(ApplicationProvider.getApplicationContext()).update { putBoolean(SettingsStore.KOREAN, false) }
+        if (fahrenheit) SettingsStore(ApplicationProvider.getApplicationContext()).update { putBoolean(SettingsStore.FAHRENHEIT, true) }
         composeRule.setContent {
             CompositionLocalProvider(LocalStandbySources provides sources) {
                 StandbyScreen(posture = posture, onOpenSettings = {}, onBrightness = {})
@@ -74,15 +80,22 @@ class StandbyScreenshotTest {
         composeRule.waitForIdle()
         gesture?.invoke()
         composeRule.waitForIdle()
+        if (rested) {
+            sources.minutesLater.longValue = 15
+            composeRule.waitForIdle()
+        }
         composeRule.onRoot().captureRoboImage("screenshots/$name.png")
     }
 
-    /** 시계 스타일 넘기기(위로 밀기). 반접기면 윗면 안에서 민다. */
+    /**
+     * 시계 스타일 넘기기(위로 밀기). 반접기면 윗면 안에서 민다.
+     * 화면 가장자리에는 번인 방지로 옮겨 다닐 여백이 있어서, 손가락처럼 가장자리 조금 안쪽에서 시작한다.
+     */
     private fun nextStyle(tabletop: Boolean = false) = composeRule.onRoot().performTouchInput {
-        if (tabletop) swipeUp(startY = height * 0.4f, endY = height * 0.05f) else swipeUp()
+        if (tabletop) swipeUp(startY = height * 0.4f, endY = height * 0.05f) else swipeUp(startY = height * 0.9f, endY = height * 0.1f)
     }
 
-    private fun nextPage() = composeRule.onRoot().performTouchInput { swipeLeft() }
+    private fun nextPage() = composeRule.onRoot().performTouchInput { swipeLeft(startX = width * 0.9f, endX = width * 0.1f) }
 
     // 폴드8 커버 화면
     @Config(qualifiers = FOLD8_COVER_LAND) @Test fun fold8CoverClock() = shoot("fold8_cover_land_clock")
@@ -108,6 +121,21 @@ class StandbyScreenshotTest {
     // 좁은 세로 화면: 달력 스타일의 큰 날짜와 시각이 한 줄에 들어가야 한다.
     @Config(qualifiers = FLIP8_PORT) @Test fun narrow21x9Calendar() = shoot("narrow_21x9_port_calendar") { nextStyle(); composeRule.waitForIdle(); nextStyle() }
     @Config(qualifiers = GALAXY_S_PORT) @Test fun galaxySPortraitCalendar() = shoot("galaxy_s_port_calendar") { nextStyle(); composeRule.waitForIdle(); nextStyle() }
+
+    // 낮에 10분 넘게 가만히 두면 쉬는 화면: 한 단계 어둡고 큰 숫자는 외곽선(번인 방지)
+    @Config(qualifiers = FOLD8_COVER_LAND) @Test fun fold8CoverRestedClock() = shoot("fold8_cover_land_rested_clock", rested = true)
+    @Config(qualifiers = FOLD8_COVER_LAND) @Test fun fold8CoverRestedDigital() = shoot("fold8_cover_land_rested_digital", rested = true) { nextStyle() }
+    @Config(qualifiers = FOLD8_COVER_LAND) @Test fun fold8CoverRestedCalendar() = shoot("fold8_cover_land_rested_calendar", rested = true) { nextStyle(); composeRule.waitForIdle(); nextStyle() }
+    @Config(qualifiers = FOLD8_COVER_LAND) @Test fun fold8CoverRestedWeather() = shoot("fold8_cover_land_rested_weather", rested = true) { nextPage() }
+    @Config(qualifiers = FOLD8_INNER_PORT) @Test fun fold8InnerRestedTabletop() = shoot("fold8_inner_rested_tabletop", Posture.Tabletop, rested = true)
+    @Config(qualifiers = FLIP8_LAND) @Test fun flip8RestedCalendar() = shoot("flip8_land_rested_calendar", rested = true) { nextStyle(); composeRule.waitForIdle(); nextStyle() }
+
+    // 잠긴 동안: 일정 제목은 "일정", 사진 카드는 빠진다
+    @Config(qualifiers = FOLD8_COVER_LAND) @Test fun fold8CoverLockedCalendar() = shoot("fold8_cover_land_locked_calendar", sources = FixedSources(locked = true)) { nextStyle(); composeRule.waitForIdle(); nextStyle() }
+    @Config(qualifiers = FOLD8_INNER_LAND) @Test fun fold8InnerLocked() = shoot("fold8_inner_land_locked", sources = FixedSources(locked = true))
+
+    // 화씨: 세 자리 기온도 잘리지 않아야 한다
+    @Config(qualifiers = FOLD8_COVER_LAND) @Test fun fold8CoverWeatherFahrenheit() = shoot("fold8_cover_land_weather_f", sources = FixedSources(hotter = 23), fahrenheit = true) { nextPage() }
 
     // 영어 표시
     @Config(qualifiers = FOLD8_COVER_LAND) @Test fun fold8CoverCalendarEnglish() = shoot("fold8_cover_land_calendar_en", english = true) { nextStyle(); composeRule.waitForIdle(); nextStyle() }
