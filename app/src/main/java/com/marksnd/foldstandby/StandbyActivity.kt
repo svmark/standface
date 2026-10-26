@@ -4,6 +4,7 @@ import android.app.KeyguardManager
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.os.Bundle
+import android.os.SystemClock
 import android.util.Log
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
@@ -117,7 +118,9 @@ class StandbyActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         // 이미 떠 있는 화면을 루틴이 다시 열 때도 같은 규칙. 화면은 그대로 두고 쓰던 앱이 앞에 남게 한다.
-        if (skipRoutineLaunch(intent)) {
+        // 다만 Standface가 지금 앞에 떠 있으면(충전기에서 잠깐 들었다 놓은 경우) 사용 중인 앱이 Standface 자신이니 그대로 둔다.
+        // 앞에 떠 있던 화면도 새 인텐트를 받을 때는 잠깐 멈춤 상태라, 화면에서 내려갔는지(onStop)로 판단한다.
+        if (resumedAt == 0L && skipRoutineLaunch(intent)) {
             moveTaskToBack(true)
             return
         }
@@ -156,6 +159,19 @@ class StandbyActivity : ComponentActivity() {
     private fun skipRoutineLaunch(intent: Intent): Boolean =
         openedByRoutine(intent) && SettingsStore(this).read().routineOnlyLocked && inUse(this)
 
+    /** 화면에 나와 있으면 0이 아니다. 화면에서 내려가면(onStop) 0. */
+    private var resumedAt = 0L
+
+    override fun onResume() {
+        super.onResume()
+        resumedAt = SystemClock.elapsedRealtime()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        resumedAt = 0
+    }
+
     private fun hideSystemBars() {
         // 위 상태 표시줄은 늘 숨긴다. 아래는 내비게이션 방식에 따라 다르다.
         // 3버튼(◁ ○ ▢)은 몇 시간씩 같은 자리에 켜져 있어 숨기고, 가장자리를 밀면 잠깐 나온다.
@@ -177,7 +193,11 @@ class StandbyActivity : ComponentActivity() {
         private const val EXTRA_DEBUG_POSTURE = "debugPosture"
         private const val TAG = "Standface"
 
-        /** 충전이 끊긴 뒤 이만큼 다시 붙지 않으면 닫는다. */
-        private const val UNPLUG_CLOSE_MS = 5_000L
+        /**
+         * 충전이 끊긴 뒤 이만큼 다시 붙지 않으면 닫는다. 무선 충전기는 폰을 다시 올린 뒤
+         * 충전을 알리기까지 2초쯤 걸려서(폴드8에서 잼), 3초 안에 다시 올려도 5초를 넘긴다.
+         */
+        private const val UNPLUG_CLOSE_MS = 10_000L
+
     }
 }
