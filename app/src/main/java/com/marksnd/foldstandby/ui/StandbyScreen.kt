@@ -8,7 +8,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
@@ -36,6 +40,7 @@ import kotlinx.coroutines.delay
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -227,7 +232,7 @@ fun StandbyScreen(
                 // 윗면은 시계, 아랫면은 날짜와 오늘·내일 일정.
                 Column(Modifier.fillMaxSize().padding(range).offset { shift }) {
                     Box(Modifier.fillMaxWidth().weight(1f).windowInsetsPadding(WindowInsets.displayCutout)) {
-                        StandbyPages(store, settings, night, openCount, agenda, nextAlarm, deskBelow = true)
+                        StandbyPages(store, settings, night, openCount, agenda, nextAlarm, deskBelow = true, showBattery = settings.showBattery)
                     }
                     Box(Modifier.fillMaxWidth().weight(1f)) {
                         CalendarFace(today, agenda, showTime = false)
@@ -243,7 +248,7 @@ fun StandbyScreen(
                 ) {
                     val strip = layout == ScreenLayout.WithAgendaStrip
                     Box(Modifier.fillMaxWidth().weight(if (strip) 5f else 1f)) {
-                        StandbyPages(store, settings, night, openCount, agenda, nextAlarm, deskBelow = false)
+                        StandbyPages(store, settings, night, openCount, agenda, nextAlarm, deskBelow = false, showBattery = settings.showBattery)
                     }
                     if (strip) {
                         AgendaStrip(agenda, Modifier.fillMaxWidth().weight(1f))
@@ -282,6 +287,7 @@ private fun StandbyPages(
     agenda: AgendaState,
     nextAlarm: Long?,
     deskBelow: Boolean,
+    showBattery: Boolean,
 ) {
     val korean = LocalKorean.current
     // 열 때마다 시계 보기의 달력+시계로 시작한다(마지막에 본 보기를 기억하지 않는다).
@@ -301,7 +307,7 @@ private fun StandbyPages(
 
     HorizontalPager(pager, Modifier.fillMaxSize()) { page ->
         when (page) {
-            0 -> ClockPage(store, openCount, smoothNow, tick, today, night, photos, weather, media, agenda, nextAlarm, deskBelow)
+            0 -> ClockPage(store, openCount, smoothNow, tick, today, night, photos, weather, media, agenda, nextAlarm, deskBelow, showBattery)
             1 -> WeatherPage(weather)
             else -> NowPlayingPage(media, tick)
         }
@@ -322,13 +328,14 @@ private fun ClockPage(
     agenda: AgendaState,
     nextAlarm: Long?,
     deskBelow: Boolean,
+    showBattery: Boolean,
 ) {
     val inner = innerDisplay()
     BoxWithConstraints(Modifier.fillMaxSize()) {
         if (clockPageLayout(inner, maxWidth, maxHeight, deskBelow) == ClockPageLayout.UnfoldedStack) {
             UnfoldedFace(store, now, tick, today, night, photos, weather, media)
         } else {
-            ClockStyles(openCount, now, today, night, weather, agenda, nextAlarm, deskBelow)
+            ClockStyles(openCount, now, today, night, weather, agenda, nextAlarm, deskBelow, showBattery)
         }
     }
 }
@@ -343,6 +350,7 @@ private fun ClockStyles(
     agenda: AgendaState,
     nextAlarm: Long?,
     deskBelow: Boolean,
+    showBattery: Boolean,
 ) {
     val count = clockStyleCount(deskBelow)
     val styles = rememberPagerState { count }
@@ -367,6 +375,45 @@ private fun ClockStyles(
             }
         }
         StyleDots(count, styles.currentPage, Modifier.align(Alignment.CenterEnd))
+        // 달력과 시계가 함께 나오는 스타일에서만 오른쪽 위에 보인다. 화면 이동 범위 안쪽이라 함께 움직인다.
+        if (showBattery && !deskBelow && styles.currentPage == 0) {
+            BatteryLabel(Modifier.align(Alignment.TopEnd))
+        }
+    }
+}
+
+/** 배터리 잔량: 작은 회색 숫자. 실제로 채우는 중이면 번개를 앞에 붙인다(배터리 보호로 멈췄거나 가득 차면 숫자만). 쉬는 화면·야간은 팔레트가 알아서 어둡게 한다. */
+@Composable
+private fun BatteryLabel(modifier: Modifier) {
+    val battery by LocalStandbySources.current.battery()
+    val color = LocalPalette.current.secondary
+    // 무선 충전기는 충전을 잠깐씩 끊으므로, 번개는 켤 때 바로 켜고 끌 때는 몇 초 기다렸다 끈다(깜빡임 방지).
+    var bolt by remember { mutableStateOf(battery.filling) }
+    LaunchedEffect(battery.filling) {
+        if (!battery.filling) delay(BOLT_OFF_DELAY_MS)
+        bolt = battery.filling
+    }
+    Row(modifier.padding(top = 8.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+        if (bolt) {
+            Canvas(Modifier.size(width = 10.dp, height = 18.dp)) {
+                val w = size.width
+                val h = size.height
+                drawPath(
+                    Path().apply {
+                        moveTo(w * 0.65f, 0f)
+                        lineTo(0f, h * 0.58f)
+                        lineTo(w * 0.45f, h * 0.58f)
+                        lineTo(w * 0.3f, h)
+                        lineTo(w, h * 0.4f)
+                        lineTo(w * 0.55f, h * 0.4f)
+                        close()
+                    },
+                    color,
+                )
+            }
+            Spacer(Modifier.width(4.dp))
+        }
+        Label("${battery.percent}%", 18.dp, color)
     }
 }
 
@@ -387,3 +434,6 @@ fun StyleDots(count: Int, current: Int, modifier: Modifier) {
         }
     }
 }
+
+/** 충전이 끊긴 뒤 번개를 끄기까지 기다리는 시간. 무선 충전기가 충전을 다시 알리기까지 걸리는 시간보다 길게. */
+private const val BOLT_OFF_DELAY_MS = 5_000L

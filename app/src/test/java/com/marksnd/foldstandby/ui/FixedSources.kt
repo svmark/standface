@@ -86,6 +86,7 @@ class FixedSources(
     @Composable override fun agenda(refreshKey: Int) = fixed(agendaState)
     @Composable override fun nowPlaying() = fixed(media)
     @Composable override fun albumPhotos(albumId: Long?) = fixed(if (albumId != null) listOf(photo) else emptyList())
+    @Composable override fun battery() = fixed(com.marksnd.foldstandby.data.BatteryInfo(72, android.os.BatteryManager.BATTERY_PLUGGED_AC, android.os.BatteryManager.BATTERY_STATUS_CHARGING))
     @Composable override fun nextAlarm() = fixed(alarmInMinutes?.let { nowMs + it * 60_000 })
     @Composable override fun isDark() = fixed(dark)
     @Composable override fun lastMotion(enabled: Boolean) = fixed(nowMs)

@@ -30,8 +30,8 @@ android {
         applicationId = "com.marksnd.foldstandby"
         minSdk = 31
         targetSdk = 37
-        versionCode = 6
-        versionName = "1.1.0-beta.4"
+        versionCode = 7
+        versionName = "1.1.0-beta.5"
     }
 
     signingConfigs {

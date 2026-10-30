@@ -22,15 +22,18 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import java.time.LocalTime
 
-data class BatteryInfo(val percent: Int, val plugged: Int) {
+data class BatteryInfo(val percent: Int, val plugged: Int, val status: Int = BatteryManager.BATTERY_STATUS_UNKNOWN) {
     val charging get() = plugged != 0
+
+    /** 지금 실제로 채우는 중인지. 꽂혀 있어도 배터리 보호로 멈췄거나 가득 찼으면 false. */
+    val filling get() = charging && status == BatteryManager.BATTERY_STATUS_CHARGING
     val wireless get() = plugged == BatteryManager.BATTERY_PLUGGED_WIRELESS
 }
 
 private fun Intent.toBattery(): BatteryInfo {
     val level = getIntExtra(BatteryManager.EXTRA_LEVEL, 0)
     val scale = getIntExtra(BatteryManager.EXTRA_SCALE, 100).coerceAtLeast(1)
-    return BatteryInfo(level * 100 / scale, getIntExtra(BatteryManager.EXTRA_PLUGGED, 0))
+    return BatteryInfo(level * 100 / scale, getIntExtra(BatteryManager.EXTRA_PLUGGED, 0), getIntExtra(BatteryManager.EXTRA_STATUS, BatteryManager.BATTERY_STATUS_UNKNOWN))
 }
 
 @Composable

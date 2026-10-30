@@ -24,6 +24,8 @@ data class Settings(
     val wakeOnMotion: Boolean = true,
     /** 온도를 화씨로. 날씨는 섭씨로 받아 두고 그릴 때만 바꾼다. */
     val fahrenheit: Boolean = false,
+    /** 달력과 시계가 나오는 화면 오른쪽 위에 배터리 잔량을 작게 보여줄지. */
+    val showBattery: Boolean = true,
     /** 루틴이 열었는데 잠금이 풀려 있으면(폰을 쓰는 중) 바로 닫는다. 차에서 내비게이션을 밀어내지 않게. */
     val routineOnlyLocked: Boolean = true,
     /** 펼친 화면 오른쪽에 시계 대신 사진을 보여줄지. */
@@ -46,6 +48,7 @@ class SettingsStore(context: Context) {
         alarmGlow = prefs.getBoolean(ALARM_GLOW, true),
         wakeOnMotion = prefs.getBoolean(WAKE_ON_MOTION, true),
         fahrenheit = prefs.getBoolean(FAHRENHEIT, false),
+        showBattery = prefs.getBoolean(SHOW_BATTERY, true),
         routineOnlyLocked = prefs.getBoolean(ROUTINE_ONLY_LOCKED, true),
         unfoldedPhotos = prefs.getBoolean(UNFOLDED_PHOTOS, true),
         photoAlbumId = prefs.getLong(PHOTO_ALBUM_ID, 0L).takeIf { prefs.contains(PHOTO_ALBUM_ID) },
@@ -77,6 +80,7 @@ class SettingsStore(context: Context) {
         const val ALARM_GLOW = "alarmGlow"
         const val WAKE_ON_MOTION = "wakeOnMotion"
         const val FAHRENHEIT = "fahrenheit"
+        const val SHOW_BATTERY = "showBattery"
         const val ROUTINE_ONLY_LOCKED = "routineOnlyLocked"
         const val REST_HINT_SEEN = "restHintSeen"
         const val UNFOLDED_PHOTOS = "unfoldedPhotos"

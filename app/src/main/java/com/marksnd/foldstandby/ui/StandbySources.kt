@@ -8,10 +8,12 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.unit.IntOffset
 import com.marksnd.foldstandby.data.AgendaState
+import com.marksnd.foldstandby.data.BatteryInfo
 import com.marksnd.foldstandby.data.MediaState
 import com.marksnd.foldstandby.data.WeatherState
 import com.marksnd.foldstandby.data.rememberAgenda
 import com.marksnd.foldstandby.data.rememberAlbumPhotos
+import com.marksnd.foldstandby.data.rememberBattery
 import com.marksnd.foldstandby.data.rememberIsDark
 import com.marksnd.foldstandby.data.rememberLastMotion
 import com.marksnd.foldstandby.data.rememberLocked
@@ -36,6 +38,7 @@ interface StandbySources {
     @Composable fun nowPlaying(): State<MediaState>
     @Composable fun albumPhotos(albumId: Long?): State<List<Uri>>
     @Composable fun nextAlarm(): State<Long?>
+    @Composable fun battery(): State<BatteryInfo>
     @Composable fun isDark(): State<Boolean>
     @Composable fun lastMotion(enabled: Boolean): State<Long>
     @Composable fun pixelShift(rangePx: Int): State<IntOffset>
@@ -53,6 +56,7 @@ object LiveSources : StandbySources {
     @Composable override fun nowPlaying() = rememberNowPlaying()
     @Composable override fun albumPhotos(albumId: Long?) = rememberAlbumPhotos(albumId)
     @Composable override fun nextAlarm() = rememberNextAlarm()
+    @Composable override fun battery() = rememberBattery()
     @Composable override fun isDark() = rememberIsDark()
     @Composable override fun lastMotion(enabled: Boolean) = rememberLastMotion(enabled)
     @Composable override fun pixelShift(rangePx: Int) = rememberPixelShift(rangePx)

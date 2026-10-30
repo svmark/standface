@@ -191,6 +191,9 @@ private fun SetupScreen() {
                 ChoiceRow("온도 단위", listOf("섭씨 °C", "화씨 °F"), if (settings.fahrenheit) 1 else 0) {
                     store.update { putBoolean(SettingsStore.FAHRENHEIT, it == 1) }
                 }
+                ChoiceRow("배터리 잔량", listOf("보이기", "숨기기"), if (settings.showBattery) 0 else 1) {
+                    store.update { putBoolean(SettingsStore.SHOW_BATTERY, it == 0) }
+                }
 
                 SectionTitle("펼친 화면 오른쪽 스택")
                 Text(
