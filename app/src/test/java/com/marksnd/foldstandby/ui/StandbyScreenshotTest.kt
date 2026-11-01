@@ -110,8 +110,9 @@ class StandbyScreenshotTest {
 
     private fun nextPage() = composeRule.onRoot().performTouchInput { swipeLeft(startX = width * 0.9f, endX = width * 0.1f) }
 
-    // 잠자는 시간 끄기: 만진 직후 10초 동안 보이는 시각, 그 뒤의 검은 화면, 알람 전 빛은 우선
+    // 잠자는 시간 끄기: 만진 직후 10초 동안 보이는 시각(밝은 방·어두운 방), 그 뒤의 검은 화면, 알람 전 빛은 우선
     @Config(qualifiers = FOLD8_COVER_LAND) @Test fun fold8CoverQuietPeek() = shoot("fold8_cover_land_quiet_peek", quiet = true)
+    @Config(qualifiers = FOLD8_COVER_LAND) @Test fun fold8CoverQuietPeekDark() = shoot("fold8_cover_land_quiet_peek_dark", sources = FixedSources(dark = true), quiet = true)
     @Config(qualifiers = FOLD8_COVER_LAND) @Test fun fold8CoverQuietBlank() = shoot("fold8_cover_land_quiet_blank", quiet = true, quietBlank = true)
     @Config(qualifiers = FOLD8_COVER_LAND) @Test fun fold8CoverQuietAlarmGlow() = shoot("fold8_cover_land_quiet_alarm_glow", sources = FixedSources(alarmInMinutes = 5), quiet = true, quietBlank = true)
 

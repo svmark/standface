@@ -128,11 +128,11 @@ fun StandbyScreen(
     // 잠자는 시간: 알람 전 빛이 없을 때만. 알람 빛이 켜지면 잠자는 시간이어도 빛이 우선한다.
     val quietWindow = glow == null && settings.quietEnabled &&
         isQuiet(minuteOfDay(tick), settings.quietStartMin, settings.quietEndMin)
-    val night = glow == null && (quietWindow || when (settings.nightMode) {
+    val night = glow == null && when (settings.nightMode) {
         NightMode.Auto -> dark
         NightMode.On -> true
         NightMode.Off -> false
-    })
+    }
 
     // 가만히 두면 쉬기: 밤에는 1분 뒤 거의 끄고, 낮에는 10분 뒤 어둡게(쉬는 화면). 움직이거나 만지면 다시 켠다.
     // 새 알림이 오거나 음악이 재생 중이면 쉬지 않는다.
@@ -145,6 +145,8 @@ fun StandbyScreen(
     val lastActive = maxOf(lastMotion, lastTouch, nightSince, latestNotification?.postedAt ?: 0L)
     // 잠자는 시간에는 움직임·알림·음악이 깨우지 않는다. 화면을 만지면 10초만 시각을 보여준다.
     val quietBlank = quietWindow && tick - lastTouch > QUIET_PEEK_MS
+    // 만져서 시각을 보는 10초: 어두운 방이면 야간(빨강, 아주 낮은 밝기), 밝은 방이면 쉬는 화면 수준으로 읽히게 보여준다.
+    val quietPeek = quietWindow && !quietBlank
     val asleep = quietBlank || (settings.wakeOnMotion && night && tick - lastActive > SLEEP_AFTER_MS)
     val rested = settings.wakeOnMotion && !night && glow == null && !playing && tick - lastActive > REST_AFTER_MS
     val asleepNow by rememberUpdatedState(asleep)
@@ -159,6 +161,7 @@ fun StandbyScreen(
         glow != null -> 0.05f + 0.95f * (glow * 20).roundToInt() / 20f // 5% 단위로만 바꾼다
         asleep -> 0f
         night -> 0.01f
+        quietPeek -> minOf(REST_BRIGHTNESS, systemBrightness(context) ?: REST_BRIGHTNESS)
         rested -> minOf(REST_BRIGHTNESS, systemBrightness(context) ?: REST_BRIGHTNESS)
         else -> null
     }
@@ -176,7 +179,7 @@ fun StandbyScreen(
     val day = dayPalette(Accents[settings.accent.coerceIn(Accents.indices)])
     val palette = when {
         night -> NightPalette
-        rested -> day.rested()
+        rested || quietPeek -> day.rested()
         else -> day
     }
     // 처음 쉬거나 거의 꺼질 때 한 번만 "움직이거나 만지면 다시 켜져요"를 알려 준다.
