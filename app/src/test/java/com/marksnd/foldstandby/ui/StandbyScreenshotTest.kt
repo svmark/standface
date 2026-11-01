@@ -65,13 +65,22 @@ class StandbyScreenshotTest {
         sources: FixedSources = FixedSources(),
         english: Boolean = false,
         fahrenheit: Boolean = false,
+        /** 잠자는 시간 끄기를 켜고 화면 시각(9:41)이 그 안에 들게 한다. */
+        quiet: Boolean = false,
         /** 동작을 마친 뒤 아무도 만지지 않고 15분이 지난 화면(낮에는 쉬는 화면)을 찍는다. */
         rested: Boolean = false,
+        /** 잠자는 시간에 만진 지 10초가 지난 검은 화면. */
+        quietBlank: Boolean = false,
         gesture: (() -> Unit)? = null,
     ) {
         // 기본은 한국어. 영어 화면도 몇 장 함께 지킨다.
         if (english) SettingsStore(ApplicationProvider.getApplicationContext()).update { putBoolean(SettingsStore.KOREAN, false) }
         if (fahrenheit) SettingsStore(ApplicationProvider.getApplicationContext()).update { putBoolean(SettingsStore.FAHRENHEIT, true) }
+        if (quiet) SettingsStore(ApplicationProvider.getApplicationContext()).update {
+            putBoolean(SettingsStore.QUIET_ENABLED, true)
+            putInt(SettingsStore.QUIET_START, 9 * 60)
+            putInt(SettingsStore.QUIET_END, 10 * 60)
+        }
         composeRule.setContent {
             CompositionLocalProvider(LocalStandbySources provides sources) {
                 StandbyScreen(posture = posture, onOpenSettings = {}, onBrightness = {})
@@ -80,6 +89,10 @@ class StandbyScreenshotTest {
         composeRule.waitForIdle()
         gesture?.invoke()
         composeRule.waitForIdle()
+        if (quietBlank) {
+            sources.minutesLater.longValue = 1 // 만진 지 10초가 넘음
+            composeRule.waitForIdle()
+        }
         if (rested) {
             sources.minutesLater.longValue = 15
             composeRule.waitForIdle()
@@ -96,6 +109,11 @@ class StandbyScreenshotTest {
     }
 
     private fun nextPage() = composeRule.onRoot().performTouchInput { swipeLeft(startX = width * 0.9f, endX = width * 0.1f) }
+
+    // 잠자는 시간 끄기: 만진 직후 10초 동안 보이는 시각, 그 뒤의 검은 화면, 알람 전 빛은 우선
+    @Config(qualifiers = FOLD8_COVER_LAND) @Test fun fold8CoverQuietPeek() = shoot("fold8_cover_land_quiet_peek", quiet = true)
+    @Config(qualifiers = FOLD8_COVER_LAND) @Test fun fold8CoverQuietBlank() = shoot("fold8_cover_land_quiet_blank", quiet = true, quietBlank = true)
+    @Config(qualifiers = FOLD8_COVER_LAND) @Test fun fold8CoverQuietAlarmGlow() = shoot("fold8_cover_land_quiet_alarm_glow", sources = FixedSources(alarmInMinutes = 5), quiet = true, quietBlank = true)
 
     // 폴드8 커버 화면
     @Config(qualifiers = FOLD8_COVER_LAND) @Test fun fold8CoverClock() = shoot("fold8_cover_land_clock")

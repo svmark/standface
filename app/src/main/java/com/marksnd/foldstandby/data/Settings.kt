@@ -22,6 +22,10 @@ data class Settings(
     val alarmGlow: Boolean = true,
     /** 가만히 두면 쉬기: 낮에는 10분 뒤 어둡게(쉬는 화면), 밤에는 1분 뒤 거의 끈다. 움직이거나 만지면 깨어난다. */
     val wakeOnMotion: Boolean = true,
+    /** 잠자는 시간 끄기: 정한 시간에는 화면을 검게 한다(알람 전 빛은 예외). 기본은 꺼 둠. 시각은 하루 0시부터 센 분. */
+    val quietEnabled: Boolean = false,
+    val quietStartMin: Int = QUIET_DEFAULT_START,
+    val quietEndMin: Int = QUIET_DEFAULT_END,
     /** 온도를 화씨로. 날씨는 섭씨로 받아 두고 그릴 때만 바꾼다. */
     val fahrenheit: Boolean = false,
     /** 달력과 시계가 나오는 화면 오른쪽 위에 배터리 잔량을 작게 보여줄지. */
@@ -47,6 +51,9 @@ class SettingsStore(context: Context) {
         mondayFirst = prefs.getBoolean(MONDAY_FIRST, true),
         alarmGlow = prefs.getBoolean(ALARM_GLOW, true),
         wakeOnMotion = prefs.getBoolean(WAKE_ON_MOTION, true),
+        quietEnabled = prefs.getBoolean(QUIET_ENABLED, false),
+        quietStartMin = prefs.getInt(QUIET_START, QUIET_DEFAULT_START).coerceIn(0, 1439),
+        quietEndMin = prefs.getInt(QUIET_END, QUIET_DEFAULT_END).coerceIn(0, 1439),
         fahrenheit = prefs.getBoolean(FAHRENHEIT, false),
         showBattery = prefs.getBoolean(SHOW_BATTERY, true),
         routineOnlyLocked = prefs.getBoolean(ROUTINE_ONLY_LOCKED, true),
@@ -79,6 +86,9 @@ class SettingsStore(context: Context) {
         const val MONDAY_FIRST = "mondayFirst"
         const val ALARM_GLOW = "alarmGlow"
         const val WAKE_ON_MOTION = "wakeOnMotion"
+        const val QUIET_ENABLED = "quietEnabled"
+        const val QUIET_START = "quietStart"
+        const val QUIET_END = "quietEnd"
         const val FAHRENHEIT = "fahrenheit"
         const val SHOW_BATTERY = "showBattery"
         const val ROUTINE_ONLY_LOCKED = "routineOnlyLocked"

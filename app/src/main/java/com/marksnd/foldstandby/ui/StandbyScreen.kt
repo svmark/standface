@@ -59,7 +59,10 @@ import com.marksnd.foldstandby.data.MediaState
 import com.marksnd.foldstandby.data.Settings
 import com.marksnd.foldstandby.data.WeatherState
 import com.marksnd.foldstandby.data.SettingsStore
+import com.marksnd.foldstandby.data.QUIET_PEEK_MS
 import com.marksnd.foldstandby.data.glowLevel
+import com.marksnd.foldstandby.data.isQuiet
+import com.marksnd.foldstandby.data.minuteOfDay
 import com.marksnd.foldstandby.data.rememberSettings
 import com.marksnd.foldstandby.data.rememberSettingsStore
 import com.marksnd.foldstandby.service.NotificationBus
@@ -122,26 +125,31 @@ fun StandbyScreen(
     val ringing by NotificationBus.ringingAlarm.collectAsState()
     val glow = if (settings.alarmGlow) glowLevel(tick, nextAlarm, ringing != null) else null
 
-    val night = glow == null && when (settings.nightMode) {
+    // 잠자는 시간: 알람 전 빛이 없을 때만. 알람 빛이 켜지면 잠자는 시간이어도 빛이 우선한다.
+    val quietWindow = glow == null && settings.quietEnabled &&
+        isQuiet(minuteOfDay(tick), settings.quietStartMin, settings.quietEndMin)
+    val night = glow == null && (quietWindow || when (settings.nightMode) {
         NightMode.Auto -> dark
         NightMode.On -> true
         NightMode.Off -> false
-    }
+    })
 
     // 가만히 두면 쉬기: 밤에는 1분 뒤 거의 끄고, 낮에는 10분 뒤 어둡게(쉬는 화면). 움직이거나 만지면 다시 켠다.
     // 새 알림이 오거나 음악이 재생 중이면 쉬지 않는다.
-    val lastMotion by sources.lastMotion(enabled = settings.wakeOnMotion)
+    val lastMotion by sources.lastMotion(enabled = settings.wakeOnMotion && !quietWindow)
     var lastTouch by remember { mutableLongStateOf(sources.currentTimeMillis()) }
     val nightSince = remember(night) { sources.currentTimeMillis() }
     val latestNotification by NotificationBus.latest.collectAsState()
     val media by sources.nowPlaying()
     val playing = (media as? MediaState.Playing)?.now?.playing == true
     val lastActive = maxOf(lastMotion, lastTouch, nightSince, latestNotification?.postedAt ?: 0L)
-    val asleep = settings.wakeOnMotion && night && tick - lastActive > SLEEP_AFTER_MS
+    // 잠자는 시간에는 움직임·알림·음악이 깨우지 않는다. 화면을 만지면 10초만 시각을 보여준다.
+    val quietBlank = quietWindow && tick - lastTouch > QUIET_PEEK_MS
+    val asleep = quietBlank || (settings.wakeOnMotion && night && tick - lastActive > SLEEP_AFTER_MS)
     val rested = settings.wakeOnMotion && !night && glow == null && !playing && tick - lastActive > REST_AFTER_MS
     val asleepNow by rememberUpdatedState(asleep)
     val restingNow by rememberUpdatedState(rested)
-    LaunchedEffect(asleep || rested) { onRest(asleep || rested) }
+    LaunchedEffect(asleep || rested || quietWindow) { onRest(asleep || rested || quietWindow) }
     val locked by sources.locked()
     val context = LocalContext.current
     val openSettings by rememberUpdatedState(onOpenSettings)
@@ -155,7 +163,15 @@ fun StandbyScreen(
         else -> null
     }
     LaunchedEffect(brightness) { onBrightness(brightness) }
-    val sleepShade by animateFloatAsState(if (asleep) 0.93f else 0f, tween(if (asleep) 2000 else 300), label = "sleep")
+    val sleepShade by animateFloatAsState(
+        when {
+            quietBlank -> 1f // 잠자는 시간: 순검정(OLED 픽셀이 꺼진다)
+            asleep -> 0.93f
+            else -> 0f
+        },
+        tween(if (asleep) 2000 else 300),
+        label = "sleep",
+    )
 
     val day = dayPalette(Accents[settings.accent.coerceIn(Accents.indices)])
     val palette = when {
@@ -165,8 +181,9 @@ fun StandbyScreen(
     }
     // 처음 쉬거나 거의 꺼질 때 한 번만 "움직이거나 만지면 다시 켜져요"를 알려 준다.
     var restHint by remember { mutableStateOf(false) }
-    LaunchedEffect(asleep || rested) {
-        if ((asleep || rested) && !store.restHintSeen) {
+    val hintWanted = (asleep && !quietBlank) || rested
+    LaunchedEffect(hintWanted) {
+        if (hintWanted && !store.restHintSeen) {
             store.update { putBoolean(SettingsStore.REST_HINT_SEEN, true) }
             restHint = true
             delay(REST_HINT_MS)

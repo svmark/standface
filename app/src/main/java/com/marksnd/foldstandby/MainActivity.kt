@@ -1,12 +1,16 @@
 package com.marksnd.foldstandby
 
 import android.Manifest
+import android.app.TimePickerDialog
 import android.content.ActivityNotFoundException
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.widget.Toast
@@ -15,6 +19,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -53,6 +59,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.marksnd.foldstandby.data.NightMode
+import com.marksnd.foldstandby.data.formatMinute
 import com.marksnd.foldstandby.data.PhotoAlbum
 import com.marksnd.foldstandby.data.hasPhotoAccess
 import com.marksnd.foldstandby.data.listAlbums
@@ -238,10 +245,59 @@ private fun SetupScreen() {
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                ChoiceRow("잠자는 시간 끄기", listOf("켜기", "끄기"), if (settings.quietEnabled) 0 else 1) {
+                    store.update { putBoolean(SettingsStore.QUIET_ENABLED, it == 0) }
+                }
+                if (settings.quietEnabled) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text("시작", style = MaterialTheme.typography.labelLarge)
+                        OutlinedButton(onClick = {
+                            pickTime(context, settings.quietStartMin) { store.update { putInt(SettingsStore.QUIET_START, it) } }
+                        }) { Text(formatMinute(settings.quietStartMin)) }
+                        Text("끝", style = MaterialTheme.typography.labelLarge)
+                        OutlinedButton(onClick = {
+                            pickTime(context, settings.quietEndMin) { store.update { putInt(SettingsStore.QUIET_END, it) } }
+                        }) { Text(formatMinute(settings.quietEndMin)) }
+                    }
+                }
+                Text(
+                    "정한 시간에는 화면을 검게 해요. 알람 전 은은한 빛은 켜져요. 화면을 만지면 10초 동안 시각이 보여요. " +
+                        "이 시간에는 움직임이나 새 알림으로 켜지지 않아요.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                VersionLabel()
                 Spacer(Modifier.height(24.dp))
             }
         }
     }
+}
+
+/** 시각 고르기 대화상자. 24시간제, [initial]은 하루 0시부터 센 분. */
+private fun pickTime(context: Context, initial: Int, onPicked: (Int) -> Unit) {
+    TimePickerDialog(context, { _, h, m -> onPicked(h * 60 + m) }, initial / 60, initial % 60, true).show()
+}
+
+/** 앱 버전. 길게 누르면 기기·안드로이드 버전과 함께 복사해, 제보에 붙여 넣을 수 있다. */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun VersionLabel() {
+    val context = LocalContext.current
+    val summary = "Standface ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
+    val report = "$summary · Android ${Build.VERSION.RELEASE} · ${Build.MODEL}"
+    Text(
+        summary,
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+        modifier = Modifier
+            .padding(top = 8.dp)
+            .combinedClickable(onClick = {}, onLongClick = {
+                context.getSystemService(ClipboardManager::class.java)
+                    ?.setPrimaryClip(ClipData.newPlainText("Standface 버전", report))
+                // 안드로이드 13부터는 시스템이 복사했다고 알려 준다.
+                if (Build.VERSION.SDK_INT < 33) Toast.makeText(context, "복사했어요", Toast.LENGTH_SHORT).show()
+            }),
+    )
 }
 
 @Composable
